@@ -25,9 +25,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 fetch('/savelocation/', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken':csrfToken , // Ensure CSRF token is passed
-                        "Authorization": `Token ${token}`
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrfToken,
+                        // Attach Authorization header
+                        "Authorization": `Token ${token}`   // or `Token ${token}` if using DRF TokenAuth
                     },
                     body: JSON.stringify({
                         user_type: 'customer',

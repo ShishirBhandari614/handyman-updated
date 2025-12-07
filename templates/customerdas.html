@@ -18,22 +18,197 @@ margin: 0;
 
 }
 
+/* Search Bar Styles */
+.search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 600px;
+    margin: 20px auto;
+    gap: 10px;
+}
+
+#tag-input-wrapper {
+    position: relative;
+    flex: 1;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    padding: 15px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+#tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 10px 0;
+}
+
+#tags li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(81, 45, 168, 0.8);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    animation: fadeIn 0.3s ease;
+}
+
+#tags li .remove-tag {
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    line-height: 1;
+    margin-left: 4px;
+    transition: transform 0.2s;
+}
+
+#tags li .remove-tag:hover {
+    transform: scale(1.2);
+    color: #ff6b6b;
+}
+
+#tag-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: white;
+    font-size: 16px;
+    padding: 10px 0;
+    font-family: 'Arial', sans-serif;
+}
+
+#tag-input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+#suggestions {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    width: calc(100% - 60px);
+    background: rgba(30, 30, 30, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: none;
+    backdrop-filter: blur(10px);
+}
+
+#suggestions.show {
+    display: block;
+}
+
+#suggestions div {
+    padding: 12px 15px;
+    cursor: pointer;
+    color: #fff;
+    font-size: 15px;
+    transition: background-color 0.2s;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#suggestions div:last-child {
+    border-bottom: none;
+}
+
+#suggestions div:hover {
+    background-color: rgba(81, 45, 168, 0.3);
+    color: #fff;
+}
+
+#suggestions div:active {
+    background-color: rgba(81, 45, 168, 0.5);
+}
+
+#search-button {
+    flex-shrink: 0;
+    width: 50px;
+    height: 50px;
+    padding: 0;
+    background: linear-gradient(135deg, #512da8, #6b4cff);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(81, 45, 168, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#search-button:hover {
+    background: linear-gradient(135deg, #6b4cff, #512da8);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(81, 45, 168, 0.5);
+}
+
+#search-button:active {
+    transform: translateY(0);
+}
+
+#search-button i {
+    margin: 0;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .search-container {
+        max-width: 90%;
+    }
+    
+    #tag-input-wrapper {
+        padding: 12px;
+    }
+    
+    #search-button {
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+    }
+}
+
 </style>
     <div class="welcome-container">
         <h1>Welcome to HandiQ</h1>
         <p>Find exactly what you need</p>
-        <div class="search-bar">
-            <form action="{% url 'search_service_providers' %}" method="get">
-                <input type="text" id="search-input" name="service_type" list="services" placeholder="Searching for..." autocomplete="off">
-                <datalist id="services">
-                    <option value="Carpenter">
-                    <option value="Painter">
-                    <option value="Electrician">
-                    <option value="Plumber">
-                </datalist>
-                <button type="submit"><i class="fas fa-search"></i> Search</button>
-            </form>
-        </div>
+        <form action="{% url 'search_service_providers' %}" method="get" id="search-form">
+            <div class="search-container">
+                <div id="tag-input-wrapper">
+                    <ul id="tags"></ul>
+                    <input type="text" id="tag-input" placeholder="Search for services..." autocomplete="off">
+                </div>
+                <div id="suggestions" class="dropdown"></div>
+                <button type="submit" id="search-button"><i class="fas fa-search"></i></button>
+            </div>
+            <input type="hidden" name="service_type" id="hidden-input">
+        </form>
     </div>
 {% endblock %}
 
@@ -69,4 +244,5 @@ margin: 0;
         typePlaceholder();
     </script>
     <script src="{% static 'customerlocation.js' %}"></script>
+    <script src="{% static 'search_bar.js' %}"></script>
 {% endblock %}
