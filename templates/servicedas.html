@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    {% load static %}
+    <title>Customer Service Dashboard | HandiQ</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link rel="stylesheet" href="{% static 'serviceproviderdas.css' %}?v={{ STATIC_VERSION }}">
+    <style>
+        .navbar {
+            display: flex;
+            justify-content: right;
+            align-items: center;
+            padding: 10px;
+            background: none;
+        }
+
+        .navbar-content {
+            display: flex;
+            align-items: center;
+        }
+
+        #welcome-message {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .hamburger-menu {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            cursor: pointer;
+            z-index: 1000; /* Ensures it stays above other content */
+        }
+
+        .hamburger-content {
+            display: none;
+            position: absolute;
+            top: 50px;
+            left: 10px;
+            background-color: #fff;
+            color: #000;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            width: 250px;
+        }
+
+        .hamburger-content .profile {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .hamburger-content img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .hamburger-content .username {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hamburger-content .kyc-status {
+            font-size: 14px;
+            color: green;
+            margin-top: 5px;
+        }
+
+        .hamburger-content .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-top: 1px solid #ddd;
+        }
+
+        .hamburger-content .menu-item:first-child {
+            border-top: none;
+        }
+
+        .hamburger-content i {
+            margin-right: 10px;
+        }
+
+        .hamburger-content button {
+            display: block;
+            width: 100%;
+            background-color: #f44336;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .hamburger-content button:hover {
+            background-color: #d32f2f;
+        }
+
+        .hamburger-content a {
+            color: #000;
+            text-decoration: none;
+            width: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .hamburger-content a:hover {
+            background-color: #f0f0f0;
+        }
+
+        /* Initially hide the submenu */
+        .hamburger-content .submenu {
+            display: none;
+            position: absolute;
+            left: 100%; /* Positions the submenu to the right of the parent item */
+            top: 0;
+            padding-left: 20px;
+            flex-direction: column;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            width: 200px;
+        }
+
+        /* Show the submenu when hovering over the "Settings" menu */
+        .hamburger-content .menu-item.settings:hover .submenu {
+            display: block;
+        }
+
+        /* Ensure the hamburger menu is positioned correctly */
+        .hamburger-content .menu-item.settings {
+            position: relative; /* Needed for the submenu to be positioned correctly */
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="dashboard-container">
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div class="hamburger-menu" id="hamburger-menu">
+                <i class="fas fa-bars fa-2x"></i>
+            </div>
+            <div class="navbar-content">
+                <h1 id="welcome-message">Welcome, {{ username }}</h1>
+            </div>
+        </nav>
+
+        <!-- Hamburger Menu Content -->
+        <div class="hamburger-content" id="hamburger-content">
+            <!-- Profile Section -->
+            <!-- Profile Section -->
+<div class="profile">
+    {% if user.kyc %}
+        <!-- Show KYC photo only if KYC exists -->
+        <img src="{{ user.kyc.photo.url }}" alt="{{ user.kyc.name }}'s Profile Picture">
+        <div class="username">
+            <p>{{ user.kyc.name }}</p>
+            <span class="kyc-status">{{ kyc_message }}</span>
+        </div>
+    {% else %}
+        <!-- Optional: fallback content if no KYC -->
+        <div class="username">
+            <p>{{ user.username }}</p>
+            <span class="kyc-status">KYC not submitted</span>
+        </div>
+    {% endif %}
+</div>
+
+
+
+            <!-- KYC Link Menu Item -->
+<div class="menu-card">
+    <div class="menu-item">
+        <i class="fas fa-id-card"></i>
+        {% if user.is_ServiceProvider %}
+            {% if user.kyc %}
+                {% if user.kyc.is_verified %}
+                    <span>KYC Verified</span>
+                {% else %}
+                    <a href="/kyc-update/"><span>Update KYC</span></a>
+                {% endif %}
+            {% else %}
+                <a href="/kyc-verification/"><span>Submit KYC</span></a>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+
+            <!-- Settings Menu Item -->
+            <div class="menu-item settings">
+                <i class="fas fa-cog"></i>
+                <a href="/settings/">Settings</a>
+                <div class="submenu">
+                    <a href="/settings/change-phone-number/">Change Phone Number</a>
+                    <a href="/settings/change-password/">Change Password</a>
+                </div>
+            </div>
+
+            <!-- Additional Menu Items -->
+            <div class="menu-item">
+                <i class="fas fa-headset"></i>
+                <a href="/support/">Support</a>
+            </div>
+            <div class="menu-item">
+                <i class="fas fa-question-circle"></i>
+                <a href="/help/">Help</a>
+            </div>
+
+            <button id="logout-btn">Logout</button>
+        </div>
+
+        <div class="status-container">
+            <h1>Customer Service Dashboard</h1>
+            <div class="status-toggle" id="status-toggle"></div>
+        </div>
+
+        <div class="status-message online" id="status-online">
+            <div class="spinner"></div>
+            <p>Waiting for your job...</p>
+        </div>
+        <div class="status-message offline" id="status-offline">
+            <div class="spinner"></div>
+            <p>You are offline <i class="fas fa-sad-tear"></i></p>
+        </div>
+    </div>
+
+    <!-- Logout Modal -->
+    <div id="logoutModal" class="modal">
+        <div class="modal-content">
+            <p>Are you sure you want to log out?</p>
+            <button id="confirmLogout">Yes</button>
+            <button id="cancelLogout">No</button>
+        </div>
+    </div>
+
+    <script src="{% static 'logout.js' %}"></script>
+    <script src="{% static 'serviceproviserlocation.js' %}"></script>
+    <script src="{% static 'tooglebutton.js' %}"></script>
+    <script>
+        // Toggle hamburger menu visibility
+        document.getElementById('hamburger-menu').addEventListener('click', function() {
+            const menuContent = document.getElementById('hamburger-content');
+            menuContent.style.display = menuContent.style.display === 'block' ? 'none' : 'block';
+        });
+    </script>
+</body>
+
+</html>

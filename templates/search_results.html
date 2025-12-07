@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<style>
+body {
+        background: url("{% static 'images/carpenter.png' %}") no-repeat center center fixed;
+background-size: contain; /* shows full image */
+background-color: #000; /* fill empty sides with black */
+font-family: 'Arial', sans-serif;
+height: 100vh;
+display: flex;
+flex-direction: column;
+color: #fff;
+margin: 0;
+
+}
+.container {
+    display: flex;
+    justify-content: center;   /* centers horizontally */
+    align-items: center;        /* centers vertically (optional) */
+    text-align: center;         /* centers text itself */
+    height: 200px;              /* adjust as needed */
+}
+
+    .container h1 {
+    color:rgb(134, 145, 154); /* electric blue */
+    font-family: 'Inter', sans-serif;
+    text-shadow: 0px 2px 6px rgba(0,0,0,0.7);
+}
+
+</style>
+
+<div class="container">
+    <h1>the list of the service providers</h1>
+    
+</div>
+{% endblock %}

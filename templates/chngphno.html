@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Change Phone Number | HandiQ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'settings.css' %}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f4f4f9;
+        }
+
+        .settings-container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.5s ease-in-out;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .settings-container h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #512da8;
+            text-align: center;
+        }
+
+        .settings-container form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .settings-container label {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .settings-container input {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .settings-container button {
+            background-color: #512da8;
+            color: #fff;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+        }
+
+        .settings-container button:hover {
+            background-color: #311b92;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="settings-container">
+        <h1>Change Phone Number</h1>
+        <form action="/settings/change-phone-number/" method="POST">
+            {% csrf_token %}
+            <label for="new-phone">New Phone Number</label>
+            <input type="tel" id="new-phone" name="new_phone" placeholder="Enter new phone number" required>
+
+            <button type="submit">Update Phone Number</button>
+        </form>
+    </div>
+</body>
+
+</html>

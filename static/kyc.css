@@ -1,0 +1,223 @@
+/* General Page Layout */
+body {
+    font-family: "Poppins", sans-serif;
+    background: linear-gradient(135deg, #c7d2fe, #e9e9ff);
+    margin: 0;
+}
+
+/* Page Container */
+.kyc-container {
+    max-width: 700px;
+    margin: 60px auto;
+    padding: 30px;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    overflow: visible;
+    position: relative;
+}
+
+/* Heading */
+.kyc-container h1 {
+    margin-bottom: 25px;
+    font-size: 34px;
+    font-weight: 700;
+    color: #2d2d2d;
+    text-align: center;
+}
+
+/* Form Inputs */
+.kyc-form input[type="text"],
+.kyc-form input[type="file"],
+.kyc-form textarea {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 15px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    margin-bottom: 18px;
+    box-sizing: border-box;
+    transition: all 0.2s ease-in-out;
+    background: #fafafa;
+}
+
+.select2-container--default .select2-selection--multiple {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 15px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    margin-bottom: 18px;
+    box-sizing: border-box;
+    transition: all 0.2s ease-in-out;
+    background: #fafafa;
+}
+
+/* Input focus */
+.kyc-form input:focus,
+.select2-container--default .select2-selection--multiple:focus {
+    border-color: #6956e5;
+    box-shadow: 0 0 0 3px rgba(105, 86, 229, 0.2);
+    background: #fff;
+}
+
+/* Labels */
+label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #444;
+    text-align: left;
+}
+
+/* Upload container */
+.upload-container {
+    margin-bottom: 20px;
+}
+
+.select2-selection__rendered {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    min-height: 36px !important;
+}
+
+.select2-selection__choice {
+    padding: 8px 12px !important;
+    line-height: 22px !important;
+    background: #6956e5 !important;
+    border: none !important;
+    border-radius: 8px !important;
+    color: white !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    margin: 4px 6px 4px 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+/* Remove icon style */
+.select2-selection__choice__remove {
+    color: white !important;
+    margin-right: 6px !important;
+    margin-left: 4px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 18px !important;
+    height: 18px !important;
+    flex-shrink: 0 !important;
+}
+
+.select2-selection__choice__display {
+    display: inline !important;
+}
+
+/* Select2 Dropdown Fix */
+.select2-container {
+    z-index: 1000 !important;
+}
+
+.select2-dropdown {
+    overflow: visible !important;
+}
+
+.select2-results {
+    overflow: visible !important;
+}
+
+.select2-results__options {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* Submit Button */
+.kyc-form button {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #6b4cff, #4e2bad);
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: 0.2s ease-in-out;
+}
+
+.kyc-form button:hover {
+    background: linear-gradient(135deg, #5940d8, #341b7d);
+    box-shadow: 0 6px 12px rgba(70, 50, 150, 0.3);
+}
+
+/* Working Type Checkboxes and Amount Fields */
+.upload-container input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    margin-right: 8px;
+    accent-color: #6956e5;
+}
+
+/* Checkbox labels styling */
+.upload-container label[for^="hourly"],
+.upload-container label[for^="onetime"] {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    color: #444;
+    margin-bottom: 0;
+}
+
+/* Amount input fields - match other form inputs */
+.upload-container input[type="number"] {
+    width: 100%;
+    max-width: 200px;
+    padding: 12px 14px;
+    font-size: 15px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background: #fafafa;
+    box-sizing: border-box;
+    transition: all 0.2s ease-in-out;
+    margin-bottom: 0;
+}
+
+.upload-container input[type="number"]:focus {
+    border-color: #6956e5;
+    box-shadow: 0 0 0 3px rgba(105, 86, 229, 0.2);
+    background: #fff;
+    outline: none;
+}
+
+/* Amount field container styling */
+#hourly-amount-container,
+#onetime-amount-container {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+/* Amount field labels */
+#hourly-amount-container label,
+#onetime-amount-container label {
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #444;
+    white-space: nowrap;
+    min-width: 100px;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .kyc-container {
+        margin: 20px;
+        padding: 20px;
+    }
+
+    .kyc-container h1 {
+        font-size: 28px;
+    }
+}

@@ -1,0 +1,120 @@
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: 'Arial', sans-serif;
+    color: white;
+  }
+  
+  /* Background */
+  .background {
+    background: url('images/Carpenter.svg') no-repeat center center/cover;
+    height: 100vh;
+    position: relative;
+  }
+  
+  /* Navbar */
+  .navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 40px;
+  }
+  
+  .logo {
+    display: flex;
+    align-items: center;
+  }
+  
+  .logo img {
+    height: 50px;
+  }
+  
+  .logo-tagline {
+    font-size: 14px;
+    margin-left: 10px;
+    line-height: 1.5;
+    text-align: left;
+  }
+  
+  .nav-links {
+    list-style: none;
+    display: flex;
+  }
+  
+  .nav-links li {
+    margin: 0 20px;
+    position: relative;
+  }
+  
+  .nav-links a {
+    text-decoration: none;
+    color: white;
+    font-size: 16px;
+    transition: color 0.3s;
+  }
+  
+  .nav-links a:hover {
+    color: #ff0000;
+  }
+  
+  .submenu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 10px 0;
+    min-width: 150px;
+    text-align: left;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
+  }
+  
+  .submenu li {
+    padding: 5px 20px;
+  }
+  
+  .submenu li a {
+    color: white;
+    display: block;
+    transition: background 0.3s;
+  }
+  
+  .submenu li a:hover {
+    background: #444;
+  }
+  
+  .menu-item:hover .submenu {
+    display: block;
+  }
+  
+  /* Hero Section */
+  .hero {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+  
+  .hero h2 {
+    font-size: 1.5em;
+    margin-bottom: 10px;
+  }
+  
+  .hero h1 {
+    font-size: 4em;
+    margin-bottom: 10px;
+  }
+  
+  .hero .brand {
+    color: #ff0000;
+    font-weight: bold;
+  }
+  
+  .hero p {
+    font-size: 1.2em;
+  }

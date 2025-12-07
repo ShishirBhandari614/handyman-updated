@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block content %}
+<style>
+body {
+        background: url("{% static 'images/carpenter.png' %}") no-repeat center center fixed;
+background-size: contain; /* shows full image */
+background-color: #000; /* fill empty sides with black */
+font-family: 'Arial', sans-serif;
+height: 100vh;
+display: flex;
+flex-direction: column;
+color: #fff;
+margin: 0;
+
+}
+</style>
+<link rel="stylesheet" href="{% static 'ORDR.css' %}?v={{ STATIC_VERSION }}">
+
+<div class="view-booking-container">
+
+    <h2>Booking Overview</h2>
+
+    <!-- Button to View Bookings -->
+    <button class="view-booking-button" id="viewBookingBtn" onclick="toggleBookingOptions()">
+        View Booking
+    </button>
+
+    <!-- Booking Options Section -->
+    <div id="bookingOptions" class="booking-options" style="display: none;">
+        <h3>Select Booking Type</h3>
+
+        <button class="scheduled-booking-button" onclick="viewScheduledBooking()">
+            Scheduled Booking
+        </button>
+
+        <button class="completed-booking-button" onclick="viewCompletedBooking()">
+            Completed Booking
+        </button>
+    </div>
+
+</div>
+
+<script>
+    // Function to toggle the view for booking options
+    function toggleBookingOptions() {
+        let options = document.getElementById('bookingOptions');
+        options.style.display = options.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Function to redirect to the Scheduled Bookings page
+    function viewScheduledBooking() {
+        window.location.href = '/viewprofile/'; 
+    }
+
+    // Function to redirect to the Completed Bookings page
+    function viewCompletedBooking() {
+        window.location.href = '/completed-booking'; 
+    }
+</script>
+
+{% endblock %}

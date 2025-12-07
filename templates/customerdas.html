@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Welcome | HandiQ{% endblock %}
+
+{% block content %}
+<style>
+body {
+        background: url("{% static 'images/carpenter.png' %}") no-repeat center center fixed;
+background-size: contain; /* shows full image */
+background-color: #000; /* fill empty sides with black */
+font-family: 'Arial', sans-serif;
+height: 100vh;
+display: flex;
+flex-direction: column;
+color: #fff;
+margin: 0;
+
+}
+
+</style>
+    <div class="welcome-container">
+        <h1>Welcome to HandiQ</h1>
+        <p>Find exactly what you need</p>
+        <div class="search-bar">
+            <form action="{% url 'search_service_providers' %}" method="get">
+                <input type="text" id="search-input" name="service_type" list="services" placeholder="Searching for..." autocomplete="off">
+                <datalist id="services">
+                    <option value="Carpenter">
+                    <option value="Painter">
+                    <option value="Electrician">
+                    <option value="Plumber">
+                </datalist>
+                <button type="submit"><i class="fas fa-search"></i> Search</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script>
+        // Typewriter Effect for Search Placeholder
+        const serviceOptions = ["Carpenter", "Painter", "Electrician", "Plumber"];
+        let currentIndex = 0;
+        let charIndex = 0;
+
+        function typePlaceholder() {
+            const searchInput = document.getElementById('search-input');
+            const prefix = "Search for ";
+            const currentText = serviceOptions[currentIndex];
+            const displayText = prefix + currentText.substring(0, charIndex);
+
+            searchInput.placeholder = displayText;
+
+            if (charIndex < currentText.length) {
+                charIndex++;
+                setTimeout(typePlaceholder, 100); // Typing speed
+            } else {
+                // Pause before moving to the next service
+                setTimeout(() => {
+                    charIndex = 0;
+                    currentIndex = (currentIndex + 1) % serviceOptions.length;
+                    typePlaceholder();
+                }, 2000); // 2-second pause before cycling
+            }
+        }
+
+        // Start the typewriter effect
+        typePlaceholder();
+    </script>
+    <script src="{% static 'customerlocation.js' %}"></script>
+{% endblock %}

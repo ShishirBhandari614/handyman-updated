@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Details | HandiQ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    {% load static %}
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <link rel="stylesheet" href="{% static 'ORDR.css' %}?v={{ STATIC_VERSION }}">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <a href="/customerdashboard/"><img src="{% static 'images/logo.svg' %}" alt="HandiQ" width="110px"></a>
+        </div>
+    </nav>
+    
+    {% if status == 'pending' %}
+    <!-- Tracking Container -->
+    <div class="tracking-container">
+        <h2>Order Details</h2>
+       <a href="/customerdashboard/"> <img src="{{ profile }}" alt="Profile Picture" class="profile-picture"></a>
+
+        <!-- Check if user is a customer or service provider -->
+        {% if request.user.customer %}
+        <!-- User is a Customer: Show Service Provider Details -->
+        <div class="details">
+            <p><strong>Service Provider:</strong> {{ service_provider_name }}</p>
+            <p><strong>Phone:</strong> {{ phone_number }}</p>
+            <p><strong>Service Type:</strong> {{ service_type }}</p>
+            <p><strong>Booking Date:</strong> {{ booking_date }}</p>
+        </div>
+        {% elif request.user.serviceprovider %}
+        <!-- User is a Service Provider: Show Customer Details -->
+        <div class="details">
+            <p><strong>Customer:</strong> {{ customer_name }}</p>
+            <p><strong>Phone:</strong> {{ customer_phone }}</p>
+            <p><strong>Service Type:</strong> {{ service_type }}</p>
+            <p><strong>Booking Date:</strong> {{ booking_date }}</p>
+        </div>
+        {% endif %}
+        
+        <!-- Updated Buttons Section -->
+        <div class="buttons">
+            <button class="cancel-button"
+                data-booking-id="{{ booking_id }}"
+                data-service-provider-id="{{ user_id }}"
+                data-phone-number="{{ phone_number }}"
+                data-customer-name="{{ customer_name }}"
+                data-customer-phone="{{ customer_phone }}"
+                data-service-type="{{ service_type }}"
+                data-service-provider-name="{{ service_provider_name }}"
+                data-profile="{{ profile }}"
+                data-customer-id="{{ customer_id }}"
+                onclick="showCancelModal(this)">
+                Cancel
+            </button>
+
+            <button class="complete-button"
+                data-booking-id="{{ booking_id }}"
+                data-service-provider-id="{{ user_id }}"
+                data-phone-number="{{ phone_number }}"
+                data-customer-name="{{ customer_name }}"
+                data-customer-phone="{{ customer_phone }}"
+                data-service-type="{{ service_type }}"
+                data-service-provider-name="{{ service_provider_name }}"
+                data-profile="{{ profile }}"
+                data-customer-id="{{ customer_id }}"
+                onclick="showOrderCompleteMessage(this)">
+                Order Completed
+            </button>
+        </div>
+    </div>
+
+    <!-- Road and Bike Animation -->
+    <div class="road-container">
+        <div class="road">
+            <div class="dashed-lines">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        <a href=/customerdashboard/ ><img src='{% static "images/P.svg" %}' alt="Bike" class="bike"></a>
+    </div>
+
+    <!-- Rating Modal -->
+    <div class="modal" id="ratingModal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeRatingModal()">&times;</span>
+            <h3>Rate Your Experience</h3>
+            <div class="rating-stars" id="starsContainer">
+                <i class="fa fa-star" data-value="1"></i>
+                <i class="fa fa-star" data-value="2"></i>
+                <i class="fa fa-star" data-value="3"></i>
+                <i class="fa fa-star" data-value="4"></i>
+                <i class="fa fa-star" data-value="5"></i>
+            </div>
+            <button onclick="submitRating()">Submit Rating</button>
+        </div>
+    </div>
+   
+    <!-- Cancel Modal -->
+    <div class="modal" id="cancelModal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeCancelModal()">&times;</span>
+            <h3>Reason for Cancellation</h3>
+            <textarea id="cancelReason" placeholder="Please provide a reason..."></textarea>
+            <button onclick="submitCancelReason()">Submit</button>
+        </div>
+    </div>
+
+    <script src="{% static 'ratingdetails.js' %}"></script>
+    <script src="{% static 'canceldetails.js' %}"></script>
+    
+    {% elif status == 'no_pending' %}
+    <div class="tracking-container">
+        <h2>No Pending Booking</h2>
+        <p>The booking is either completed or canceled.</p>
+    </div>
+    {% endif %}
+</body>
+
+</html>

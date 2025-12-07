@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <link rel="stylesheet" href="{% static 'kyc.css' %}">
+    <title>Update KYC | HandiQ</title>
+</head>
+<body>
+<div class="kyc-container">
+    <h1>Update KYC</h1>
+    <div id="message-container" style="display:none; padding:10px; margin-bottom:15px; border-radius:5px;"></div>
+    <form class="kyc-form" id="kyc-form" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <input type="text" id="kyc-name" name="name" placeholder="Name" required>
+        <input type="text" id="kyc-address" name="address" placeholder="Address" required>
+
+        <label>Choose Service Types</label>
+        <select id="service-type-select" name="service_type[]" multiple required style="width:100%">
+            <option value="Carpenter">Carpenter</option>
+            <option value="Painter">Painter</option>
+            <option value="Electrician">Electrician</option>
+            <option value="Plumber">Plumber</option>
+        </select>
+
+        <div class="upload-container">
+                <label style="width: 100%; margin-bottom: 10px;">Choose Your Income Type</label>
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                            <input type="checkbox" id="hourly-checkbox" name="hourly" value="Hourly">
+                            <span>Hourly</span>
+                        </label>
+                        <div id="hourly-amount-container" style="display: none; align-items: center; gap: 10px; margin-left: 25px;">
+                            <label for="hourly-amount" style="white-space: nowrap;">Amount (Rs):</label>
+                            <input type="number" id="hourly-amount" name="hourly_amount" placeholder="Enter hourly amount" min="0" step="0.01" style="width: 150px;">
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                            <input type="checkbox" id="onetime-checkbox" name="onetime" value="One Time">
+                            <span>One Time</span>
+                        </label>
+                        <div id="onetime-amount-container" style="display: none; align-items: center; gap: 10px; margin-left: 25px;">
+                            <label for="onetime-amount" style="white-space: nowrap;">Amount (Rs):</label>
+                            <input type="number" id="onetime-amount" name="onetime_amount" placeholder="Enter one-time amount" min="0" step="0.01" style="width: 150px;">
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" id="working-type" name="woork_type" required>
+            </div>
+
+        <!-- Photo Uploads with previews -->
+        <div class="upload-container">
+            <label for="kyc-photo">Upload Photo</label>
+            <input type="file" id="kyc-photo" name="photo" accept="image/*">
+            <img id="photo-preview" src="" alt="Current Photo" style="display:none; max-width:150px; margin-top:10px; border:1px solid #ccc;">
+        </div>
+
+        <input type="text" id="kyc-citizenship" name="citizenship_number" placeholder="Citizenship Number" required>
+
+        <div class="upload-container">
+            <label for="kyc-citizenship-photo">Upload Citizenship Photo</label>
+            <input type="file" id="kyc-citizenship-photo" name="citizenship_photo" accept="image/*">
+            <img id="citizenship-preview" src="" alt="Current Citizenship Photo" style="display:none; max-width:150px; margin-top:10px; border:1px solid #ccc;">
+        </div>
+
+        <div class="upload-container">
+            <label for="kyc-TrainingCertificate-photo">Upload Certificate Photo</label>
+            <input type="file" id="kyc-TrainingCertificate-photo" name="training_certificate" accept="image/*">
+            <img id="certificate-preview" src="" alt="Current Certificate Photo" style="display:none; max-width:150px; margin-top:10px; border:1px solid #ccc;">
+        </div>
+
+        <button type="submit">Update KYC</button>
+    </form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("kyc-form");
+    const messageContainer = document.getElementById("message-container");
+
+    // Initialize Select2
+    $('#service-type-select').select2({
+        placeholder: "Select service type",
+        maximumSelectionLength: 4,
+        tags: false
+    });
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+        showMessage("You are not logged in. Please log in first.", "red");
+        return;
+    }
+
+    // Fetch existing KYC data
+    async function fetchKYC() {
+        try {
+            const response = await fetch("/api/kyc-verification/", {
+                method: "GET",
+                headers: { "Authorization": `Token ${token}` }
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                const kyc = data;
+
+                // Prefill text inputs
+                document.getElementById("kyc-name").value = kyc.name || '';
+                document.getElementById("kyc-address").value = kyc.address || '';
+                document.getElementById("working-type").value = kyc.woork_type || '';
+                document.getElementById("kyc-citizenship").value = kyc.citizenship_number || '';
+
+                // Prefill service_type
+                if (kyc.service_type) {
+                    const services = kyc.service_type.split(',').map(s => s.trim());
+                    $('#service-type-select').val(services).trigger('change');
+                }
+
+                // Show existing photo previews
+                if (kyc.photo) {
+                    document.getElementById("photo-preview").src = kyc.photo;
+                    document.getElementById("photo-preview").style.display = "block";
+                }
+                if (kyc.citizenship_photo) {
+                    document.getElementById("citizenship-preview").src = kyc.citizenship_photo;
+                    document.getElementById("citizenship-preview").style.display = "block";
+                }
+                if (kyc.training_certificate) {
+                    document.getElementById("certificate-preview").src = kyc.training_certificate;
+                    document.getElementById("certificate-preview").style.display = "block";
+                }
+
+            } else {
+                showMessage(JSON.stringify(data), "red");
+            }
+        } catch (err) {
+            showMessage("Failed to fetch KYC details.", "red");
+            console.error(err);
+        }
+    }
+
+    fetchKYC();
+
+    // Live preview for photo uploads
+    document.getElementById("kyc-photo").addEventListener("change", function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                document.getElementById("photo-preview").src = event.target.result;
+                document.getElementById("photo-preview").style.display = "block";
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    document.getElementById("kyc-citizenship-photo").addEventListener("change", function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                document.getElementById("citizenship-preview").src = event.target.result;
+                document.getElementById("citizenship-preview").style.display = "block";
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    document.getElementById("kyc-TrainingCertificate-photo").addEventListener("change", function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                document.getElementById("certificate-preview").src = event.target.result;
+                document.getElementById("certificate-preview").style.display = "block";
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Submit update
+    form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const formData = new FormData(form);
+
+        // Convert selected services to comma-separated string
+        const selectedServices = $('#service-type-select').val() || [];
+        formData.set('service_type', selectedServices.join(','));
+
+        // Only include photo fields if a file was actually selected
+        // If no file is selected, the field won't be in formData, which is what we want
+        // The backend will preserve existing photos when fields are missing
+
+        try {
+            const response = await fetch("/api/kyc-verification/", {
+                method: "PUT",
+                body: formData,
+                headers: {
+                    "X-CSRFToken": document.querySelector("input[name=csrfmiddlewaretoken]").value,
+                    "Authorization": `Token ${token}`
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showMessage(data.success || "KYC updated successfully!", "green");
+                setTimeout(() => window.location.reload(), 2000);
+            } else {
+                showMessage(JSON.stringify(data), "red");
+            }
+        } catch (err) {
+            showMessage("An unexpected error occurred. Please try again later.", "red");
+            console.error(err);
+        }
+    });
+
+    function showMessage(text, color) {
+        messageContainer.textContent = text;
+        messageContainer.style.display = "block";
+        messageContainer.style.backgroundColor = color;
+        messageContainer.style.color = "white";
+        setTimeout(() => messageContainer.style.display = "none", 3000);
+    }
+});
+
+</script>
+<script src="{% static 'kycWorkingType.js' %}"></script>
+</body>
+</html>
