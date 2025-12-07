@@ -18,18 +18,23 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
                 const csrfToken = getCSRFToken();
                 console.log("CSRF Token:", csrfToken);
+
+                const token = localStorage.getItem("token");
+                console.log("Auth Token:", token);
                 // Send location data to the server
                 fetch('/savelocation/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRFToken':csrfToken , // Ensure CSRF token is passed
+                        "Authorization": `Token ${token}`
                     },
                     body: JSON.stringify({
                         user_type: 'customer',
                         latitude: latitude,
                         longitude: longitude,
                     }),
+                    credentials: "include"
                 })
                     .then((response) => {
                         if (response.ok) {
