@@ -124,13 +124,13 @@
             padding: 10px 20px;
         }
 
-        .multi-search-container {
+        .search-section {
             flex: 1;
             margin: 0 20px;
             position: relative;
         }
 
-        .multi-search-container form {
+        .search-section form {
             display: flex;
             align-items: center;
             gap: 8px;
@@ -185,7 +185,7 @@
             min-width: 100px;
         }
 
-        #suggestions.dropdown {
+        #suggestions.show {
             position: absolute;
             top: calc(100% + 4px);
             left: 0;
@@ -196,18 +196,18 @@
             z-index: 10;
         }
 
-        #suggestions.dropdown div {
+        #suggestions.show div {
             padding: 8px;
             color: #fff;
             cursor: pointer;
             border-bottom: 1px solid #444;
         }
 
-        #suggestions.dropdown div:hover {
+        #suggestions.show div:hover {
             background: rgba(255,255,255,0.1);
         }
 
-        .multi-search-container button[type="submit"] {
+        .search-section button[type="submit"] {
             background: #28a745;
             border: none;
             color: #fff;
@@ -216,7 +216,7 @@
             cursor: pointer;
         }
 
-        .multi-search-container button[type="submit"]:hover {
+        .search-section button[type="submit"]:hover {
             background: #218838;
         }
     </style>
@@ -240,17 +240,18 @@
         <ul>
             <!-- Search bar first -->
              <li class="search-bar-inline">
-            <div class="multi-search-container">
-                <form action="{% url 'search_service_providers' %}" method="get" onsubmit="prepareSubmission()">
-                <div id="tag-input-wrapper">
-                    <ul id="tags"></ul>
-                    <input type="text" id="tag-input" placeholder="Search for services..." autocomplete="off">
-                </div>
-                <div id="suggestions" class="dropdown"></div>
-                <input type="hidden" name="service_type" id="hidden-input">
-                <button type="submit"><i class="fas fa-search"></i></button>
+            <div class="search-section">
+                <form id="search-form">
+                    <div class="tag-input-container">
+                        <ul id="tags"></ul>
+                        <input type="text" id="tag-input" placeholder="Search services...">
+                        <input type="hidden" id="hidden-input">
+                    </div>
+                    <div id="suggestions" class="suggestions-box"></div>
+                    <button type="submit">Search</button>
                 </form>
             </div>
+
             </li>
 
             <!-- Then View Order Details -->
@@ -313,10 +314,10 @@
         });
     </script>
 
-    {% block extra_scripts %}
+   
     
     <script src="{% static 'search_bar.js' %}"></script>
-    {% endblock %}
+    
 </body>
 
 </html>

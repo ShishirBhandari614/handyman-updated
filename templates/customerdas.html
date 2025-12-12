@@ -213,36 +213,8 @@ margin: 0;
 {% endblock %}
 
 {% block extra_scripts %}
-    <script>
-        // Typewriter Effect for Search Placeholder
-        const serviceOptions = ["Carpenter", "Painter", "Electrician", "Plumber"];
-        let currentIndex = 0;
-        let charIndex = 0;
 
-        function typePlaceholder() {
-            const searchInput = document.getElementById('search-input');
-            const prefix = "Search for ";
-            const currentText = serviceOptions[currentIndex];
-            const displayText = prefix + currentText.substring(0, charIndex);
-
-            searchInput.placeholder = displayText;
-
-            if (charIndex < currentText.length) {
-                charIndex++;
-                setTimeout(typePlaceholder, 100); // Typing speed
-            } else {
-                // Pause before moving to the next service
-                setTimeout(() => {
-                    charIndex = 0;
-                    currentIndex = (currentIndex + 1) % serviceOptions.length;
-                    typePlaceholder();
-                }, 2000); // 2-second pause before cycling
-            }
-        }
-
-        // Start the typewriter effect
-        typePlaceholder();
-    </script>
+    {% comment %} <script src="{% static 'search_providers.js' %}"></script> {% endcomment %}
     <script src="{% static 'customerlocation.js' %}"></script>
     <script src="{% static 'search_bar.js' %}"></script>
 {% endblock %}

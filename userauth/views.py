@@ -156,7 +156,9 @@ class ServiceProviderDashboardView(View):
             'email': request.user.email,
             'kyc_message': kyc_message,  # Pass the KYC message to the template
             'kyc_link': kyc_link,  # Dynamic KYC link
+            'provider_id': request.user.serviceprovider.id,
         }
+        print(context)
 
         return render(request, 'servicedas.html', context)
 

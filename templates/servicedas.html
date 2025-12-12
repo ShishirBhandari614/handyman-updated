@@ -244,10 +244,14 @@
             <button id="cancelLogout">No</button>
         </div>
     </div>
-
+    <script>
+        const providerId = "{{ provider_id }}";
+        console.log(providerId);
+    </script>
     <script src="{% static 'logout.js' %}"></script>
     <script src="{% static 'serviceproviserlocation.js' %}"></script>
-    <script src="{% static 'tooglebutton.js' %}"></script>
+    <script type="module" src="{% static 'tooglebutton.js' %}"></script>
+    <script type="module" src="{% static 'firebase_config.js' %}"></script>
     <script>
         // Toggle hamburger menu visibility
         document.getElementById('hamburger-menu').addEventListener('click', function() {

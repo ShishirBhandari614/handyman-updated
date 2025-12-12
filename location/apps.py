@@ -5,4 +5,5 @@ class LocationConfig(AppConfig):
     name = 'location'
 
     def ready(self):
-        import location.signals  # Ensure signals are loaded
+        import location.signals
+        import finalsemproject.firebase_init
