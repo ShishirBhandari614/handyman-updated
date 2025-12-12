@@ -1,38 +1,30 @@
 {% extends "base_search.html" %}
 {% load static %}
+
 {% block content %}
+
 <style>
 body {
-        background: url("{% static 'images/carpenter.png' %}") no-repeat center center fixed;
-background-size: contain; /* shows full image */
-background-color: #000; /* fill empty sides with black */
-font-family: 'Arial', sans-serif;
-height: 100vh;
-display: flex;
-flex-direction: column;
-color: #fff;
-margin: 0;
-
+    background: url("{% static 'images/carpenter.png' %}") no-repeat center center fixed;
+    background-size: contain;
+    background-color: #000;
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    color: #fff;
 }
-.container {
+
+#providers-container {
     display: flex;
-    justify-content: center;   /* centers horizontally */
-    align-items: center;        /* centers vertically (optional) */
-    text-align: center;         /* centers text itself */
-    height: 200px;              /* adjust as needed */
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
 }
 
-    .container h1 {
-    color:rgb(134, 145, 154); /* electric blue */
-    font-family: 'Inter', sans-serif;
-    text-shadow: 0px 2px 6px rgba(0,0,0,0.7);
-}
 .provider-card {
     background: rgba(255,255,255,0.1);
     padding: 20px;
-    margin: 15px auto;
-    width: 90%;
-    max-width: 400px;
+    width: 280px;
     border-radius: 12px;
     backdrop-filter: blur(4px);
     text-align: center;
@@ -44,25 +36,11 @@ margin: 0;
     height: 100px;
     object-fit: cover;
     border-radius: 50%;
-    margin-bottom: 10px;
 }
 
-.online {
-    color: #00ff66;
-    font-weight: bold;
-}
+.online { color: #00ff66; font-weight: bold; }
+.offline { color: #ff4444; font-weight: bold; }
 
-.offline {
-    color: #ff4444;
-    font-weight: bold;
-}
-#providers-container {
-    display: flex;
-    flex-wrap: wrap;          /* allow cards to move to next row if screen is small */
-    justify-content: center;  /* center cards horizontally */
-    gap: 20px;                /* space between cards */
-    padding: 20px;
-}
 .book-btn {
     margin-top: 15px;
     padding: 10px 20px;
@@ -72,21 +50,8 @@ margin: 0;
     font-weight: bold;
     border-radius: 8px;
     cursor: pointer;
-    transition: 0.3s ease;
 }
-
-.book-btn:hover {
-    background: #ffa726;
-    transform: scale(1.05);
-}
-
-
 </style>
-
-
-
-<!-- Container for providers -->
-
 
 <h2 id="title"></h2>
 
@@ -94,22 +59,11 @@ margin: 0;
 <input type="hidden" id="customer-lat" value="{{ customer_location.latitude }}">
 <input type="hidden" id="customer-lon" value="{{ customer_location.longitude }}">
 
-<!-- Container where JS will inject provider cards -->
+<!-- Provider cards container -->
 <div id="providers-container"></div>
 
-
-<!-- Your JS file -->
+<!-- JS Files -->
 <script src="{% static 'search_providers.js' %}"></script>
-
-
-
-
 <script type="module" src="{% static 'firebase_realtime.js' %}"></script>
 
-
-
-<!-- Include Firebase JS (from previous snippet) -->
-
-
 {% endblock %}
-

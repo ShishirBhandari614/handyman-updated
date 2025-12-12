@@ -68,12 +68,14 @@
 #     return JsonResponse({'error': 'Invalid request method.'}, status=400)
 
 
+from operator import is_
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from .models import CustomerLocation, ServiceProviderLocation
 from .serializers import CustomerLocationSerializer, ServiceProviderLocationSerializer
+from userauth.models import ServiceProvider
 
 
 class SaveLocationView(APIView):
@@ -110,18 +112,66 @@ class SaveLocationView(APIView):
 
 
 class UpdateStatusView(APIView):
-    permission_classes = [IsAuthenticated]
+    pass
+    # permission_classes = [IsAuthenticated]
+
+    # def post(self, request, *args, **kwargs):
+    #     is_online = request.data.get("is_online")
+
+    #     if hasattr(request.user, "serviceprovider"):
+    #         service_provider = request.user.serviceprovider
+    #         obj, created = ServiceProviderLocation.objects.update_or_create(
+    #             service_provider=service_provider,
+    #             defaults={"is_online": is_online},
+    #         )
+    #         serializer = ServiceProviderLocationSerializer(obj)
+    #         return Response({"message": "Service provider status updated.", "data": serializer.data}, status=status.HTTP_200_OK)
+
+    #     return Response({"error": "User is not a service provider."}, status=status.HTTP_400_BAD_REQUEST)
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.response import Response
+from rest_framework import status
+
+from django.utils.decorators import method_decorator
+
+
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class FirebaseUpdateStatusAPIView(APIView):
+    permission_classes = [AllowAny]
+
 
     def post(self, request, *args, **kwargs):
+        provider_id = request.data.get("provider_id")
         is_online = request.data.get("is_online")
 
-        if hasattr(request.user, "serviceprovider"):
-            service_provider = request.user.serviceprovider
+        if provider_id is None or is_online is None:
+            return Response(
+                {"error": "Missing provider_id or is_online"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            provider = ServiceProvider.objects.get(id=provider_id)
+
             obj, created = ServiceProviderLocation.objects.update_or_create(
-                service_provider=service_provider,
+                service_provider=provider,
                 defaults={"is_online": is_online},
             )
-            serializer = ServiceProviderLocationSerializer(obj)
-            return Response({"message": "Service provider status updated.", "data": serializer.data}, status=status.HTTP_200_OK)
 
-        return Response({"error": "User is not a service provider."}, status=status.HTTP_400_BAD_REQUEST)
+            serializer = ServiceProviderLocationSerializer(obj)
+
+            return Response(
+                {"message": "Status updated via Firebase", "data": serializer.data},
+                status=status.HTTP_200_OK
+            )
+
+        except ServiceProvider.DoesNotExist:
+            return Response(
+                {"error": "Provider not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )

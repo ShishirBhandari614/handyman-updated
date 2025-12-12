@@ -2,74 +2,67 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase
 import { 
     getDatabase, 
     ref, 
-    onChildChanged, 
-    onDisconnect, 
-    update 
+    onChildChanged 
 } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 
-// Firebase config
 const firebaseConfig = {
     databaseURL: "https://handyman-fc64d-default-rtdb.asia-southeast1.firebasedatabase.app/"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const spRef = ref(db, "service_providers");
 
 console.log("🔥 Firebase Realtime initialized");
 
-// ✅ You MUST know the provider's ID on this page
-// Example: Django injects it into the template
-// <script> const providerId = "{{ provider.id }}"; </script>
+// ✅ Sorting function
+function reorderProviderCards() {
+    const container = document.getElementById("providers-container");
+    if (!container) return;
 
-if (typeof providerId !== "undefined") {
-    const providerRef = ref(db, `service_providers/${providerId}`);
+    const cards = Array.from(container.children);
 
-    // ✅ Automatically set offline when browser closes, refreshes, crashes, etc.
-    onDisconnect(providerRef).update({
-        is_online: false
+    cards.sort((a, b) => {
+        const aOnline = a.dataset.online === "true";
+        const bOnline = b.dataset.online === "true";
+
+        if (aOnline !== bOnline) return aOnline ? -1 : 1;
+
+        const aRating = parseFloat(a.dataset.rating || 0);
+        const bRating = parseFloat(b.dataset.rating || 0);
+        if (aRating !== bRating) return bRating - aRating;
+
+        const aDistance = parseFloat(a.dataset.distance || 999);
+        const bDistance = parseFloat(b.dataset.distance || 999);
+        return aDistance - bDistance;
     });
 
-    console.log("✅ onDisconnect() registered for provider:", providerId);
+    cards.forEach(card => container.appendChild(card));
 }
 
-// ✅ Real-time listener for customer UI
+// ✅ Real-time updates
 document.addEventListener("DOMContentLoaded", () => {
     onChildChanged(spRef, snapshot => {
         const provider = snapshot.val();
-        console.log("🔥 Firebase update received:", provider);
-
-        const card = document.getElementById(`provider-${String(provider.id)}`);
+        const card = document.getElementById(`provider-${provider.id}`);
 
         if (card) {
-            // --- Update online/offline status ---
+            // Update status
             const statusEl = card.querySelector(".status");
-            if (statusEl) {
-                statusEl.textContent = provider.is_online ? "Online" : "Offline";
-                statusEl.classList.toggle("online", provider.is_online);
-                statusEl.classList.toggle("offline", !provider.is_online);
-            }
+            statusEl.textContent = provider.is_online ? "Online" : "Offline";
+            statusEl.classList.toggle("online", provider.is_online);
+            statusEl.classList.toggle("offline", !provider.is_online);
 
-            // --- Update name ---
-            const nameEl = card.querySelector("h4");
-            if (nameEl) nameEl.textContent = provider.name || "Unnamed";
+            // Update sorting metadata
+            card.dataset.online = provider.is_online;
 
-            // --- Update work type and service type ---
-            const workTypeEl = card.querySelector(".work-type");
-            if (workTypeEl) workTypeEl.textContent = `Work Type: ${provider.work_type || 'N/A'}`;
-
-            const serviceTypeEl = card.querySelector(".service-type");
-            if (serviceTypeEl) serviceTypeEl.textContent = `Service Type: ${provider.service_type || 'N/A'}`;
-
-            // --- Optional: update timestamp ---
-            const updatedEl = card.querySelector(".updated-at");
-            if (updatedEl) updatedEl.textContent = `Updated: ${new Date().toLocaleTimeString()}`;
+            reorderProviderCards();
 
         } else {
             // Provider not in list → add if online
             if (provider.is_online && window.addProviderCard) {
                 window.addProviderCard(provider);
+                reorderProviderCards();
             }
         }
     });

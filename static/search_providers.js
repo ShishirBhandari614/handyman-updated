@@ -1,6 +1,4 @@
-// search_providers.js
-
-// Global function so Firebase can access it
+// ✅ Global function so Firebase can call it
 window.addProviderCard = function (provider) {
     const container = document.getElementById("providers-container");
 
@@ -11,6 +9,11 @@ window.addProviderCard = function (provider) {
     card = document.createElement("div");
     card.className = "provider-card";
     card.id = `provider-${provider.id}`;
+
+    // ✅ Sorting metadata
+    card.dataset.online = provider.is_online;
+    card.dataset.rating = provider.average_rating || 0;
+    card.dataset.distance = provider.distance || 999;
 
     card.innerHTML = `
         <img src="${provider.photo_url || '/static/default.jpg'}" alt="${provider.name}">
@@ -38,8 +41,7 @@ window.addProviderCard = function (provider) {
     container.appendChild(card);
 };
 
-
-
+// ✅ Load initial providers from Django API
 document.addEventListener("DOMContentLoaded", async () => {
     const container = document.getElementById("providers-container");
     const title = document.getElementById("title");

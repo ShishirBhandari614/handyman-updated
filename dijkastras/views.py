@@ -46,6 +46,9 @@ class SearchServiceProvidersAPIView(APIView):
                 customer_location.latitude, customer_location.longitude,
                 p.latitude, p.longitude
             )
+            if distance > 2:
+                continue
+
 
             results.append({
                 "id": sp.id,
