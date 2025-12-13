@@ -23,6 +23,7 @@ ref.on("child_changed", async (snapshot) => {
     });
 
     console.log("✅ Django updated");
+    
   } catch (err) {
     console.error("❌ Django update failed:", err.message);
   }

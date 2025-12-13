@@ -1,8 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-import { 
-    getDatabase, 
-    ref, 
-    onChildChanged 
+import {
+    getDatabase,
+    ref,
+    onChildChanged
 } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 
 const firebaseConfig = {
@@ -15,7 +15,8 @@ const spRef = ref(db, "service_providers");
 
 console.log("🔥 Firebase Realtime initialized");
 
-// ✅ Sorting function
+
+// ✅ KEEP sorting logic (unchanged)
 function reorderProviderCards() {
     const container = document.getElementById("providers-container");
     if (!container) return;
@@ -40,30 +41,69 @@ function reorderProviderCards() {
     cards.forEach(card => container.appendChild(card));
 }
 
-// ✅ Real-time updates
+
+// ✅ Firebase listener (NO distance math)
 document.addEventListener("DOMContentLoaded", () => {
-    onChildChanged(spRef, snapshot => {
-        const provider = snapshot.val();
-        const card = document.getElementById(`provider-${provider.id}`);
+
+    const token = localStorage.getItem("token");
+    const serviceType = new URLSearchParams(window.location.search).get("service_type");
+
+    onChildChanged(spRef, async snapshot => {
+        const firebaseProvider = snapshot.val();
+        const providerId = firebaseProvider.id;
+    
+        console.log("🔥 Firebase changed:", firebaseProvider);
+    
+        const res = await fetch(
+            `/search-service/?service_type=${encodeURIComponent(serviceType)}&provider_id=${providerId}`,
+            {
+                headers: {
+                    "Authorization": `Token ${token}`
+                }
+            }
+        );
+    
+        const data = await res.json();
+        console.log("📡 Django response for provider", providerId, ":", data);
+    
+        const provider = data.providers?.[0] || null;
+    
+        const card = document.getElementById(`provider-${providerId}`);
+        console.log("🧩 Existing card:", card);
+    
+        if (!provider) {
+            console.log("🚫 Provider not allowed by backend (2km or filters). Removing card if exists.");
+            if (card) card.remove();
+            return;
+        }
+    
+        console.log("✅ Using provider from backend:", provider);
+    
+        // ✅ Firebase is the REAL source of truth for online/offline
+const isOnline = firebaseProvider.is_online;
 
         if (card) {
-            // Update status
+            console.log("♻️ Updating existing card", provider.id, "to online =", isOnline);
+
+            card.dataset.online = isOnline;
+            card.dataset.rating = provider.average_rating;
+            card.dataset.distance = provider.distance;
+
             const statusEl = card.querySelector(".status");
-            statusEl.textContent = provider.is_online ? "Online" : "Offline";
-            statusEl.classList.toggle("online", provider.is_online);
-            statusEl.classList.toggle("offline", !provider.is_online);
+            statusEl.textContent = isOnline ? "Online" : "Offline";
+            statusEl.className = `status ${isOnline ? "online" : "offline"}`;
 
-            // Update sorting metadata
-            card.dataset.online = provider.is_online;
-
-            reorderProviderCards();
-
+            const distEl = card.querySelector(".distance");
+            if (distEl) distEl.textContent = `Distance: ${provider.distance} km`;
         } else {
-            // Provider not in list → add if online
-            if (provider.is_online && window.addProviderCard) {
-                window.addProviderCard(provider);
-                reorderProviderCards();
-            }
+            console.log("➕ No card found, creating new card for", provider.id);
+
+            // ✅ Override Django’s stale value with Firebase’s real-time value
+            provider.is_online = isOnline;
+
+            window.addProviderCard(provider);
         }
+    
+        reorderProviderCards();
     });
 });
