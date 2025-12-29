@@ -6,11 +6,27 @@ class Booking(models.Model):
     service_provider = models.ForeignKey("userauth.ServiceProvider", on_delete=models.CASCADE)
     service_type = models.CharField(max_length=255)
     booking_date = models.DateTimeField()
-    status = models.CharField(max_length=50, choices=[('pending', 'Pending'), ('completed', 'Completed'), ('canceled', 'Canceled')])
- 
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+        ('canceled', 'Canceled'),
+        ('expired', 'Expired'),
+        ('failed', 'Failed'),
+        ('refunded', 'Refunded'),
+    ]
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    provider_availability = models.CharField(
+        max_length=10,
+        choices=[('online', 'Online'), ('offline', 'Offline')],
+        default='offline'
+    )
     
     def __str__(self):
-        return f"  {self.service_provider.user.username}"
+        return f"{self.service_provider.user.username} - {self.service_type}"
+
 
 class Rating(models.Model):
     customer = models.ForeignKey("userauth.Customer", on_delete=models.CASCADE)

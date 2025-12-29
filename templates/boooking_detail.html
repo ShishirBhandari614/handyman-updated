@@ -1,0 +1,27 @@
+{% extends "base_search.html" %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'booking_details.css' %}">
+<div class="booking-page">
+  <h1 class="page-title">My Bookings</h1>
+
+  <!-- Status Buttons -->
+  <div id="status-buttons" class="status-buttons">
+    <button data-status="pending">Pending</button>
+    <button data-status="accepted">Accepted</button>
+    <button data-status="in_progress">In Progress</button>
+    <button data-status="completed">Completed</button>
+    <button data-status="canceled">Canceled</button>
+    <button data-status="expired">Expired</button>
+    <button data-status="failed">Failed</button>
+    <button data-status="refunded">Refunded</button>
+  </div>
+
+  <!-- Bookings Container -->
+  <div id="bookings-container" class="bookings-container">
+    <!-- Bookings will be injected here by JS -->
+  </div>
+</div>
+<script src="{% static 'boooking_details.js' %}"></script>
+{% endblock %}

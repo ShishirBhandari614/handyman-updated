@@ -3,7 +3,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 
 class CustomerLocation(models.Model):
-    customer = models.ForeignKey("userauth.Customer", on_delete=models.CASCADE, related_name="customer_location")
+    customer = models.OneToOneField("userauth.Customer", on_delete=models.CASCADE, related_name="customer_location")
     latitude = models.FloatField()
     longitude = models.FloatField()
 
@@ -11,7 +11,7 @@ class CustomerLocation(models.Model):
         return f"{self.customer.user.username} - ({self.latitude}, {self.longitude})"
         
 class ServiceProviderLocation(models.Model):
-    service_provider = models.ForeignKey("userauth.ServiceProvider", on_delete=models.CASCADE, related_name="serviceprovider_location")
+    service_provider = models.OneToOneField("userauth.ServiceProvider", on_delete=models.CASCADE, related_name="serviceprovider_location")
     latitude = models.FloatField()
     longitude = models.FloatField()
     is_online = models.BooleanField(default=False)

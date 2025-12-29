@@ -58,3 +58,48 @@ def book_service(request):
             return JsonResponse({"message": f"An error occurred: {str(e)}"}, status=500)
 
     return JsonResponse({"message": "Invalid request method."}, status=400)
+
+
+# sms/views.py
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status, permissions
+
+from ratings.models import Booking
+from SMS.utils import send_sms
+
+
+class SendSMSView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        booking_id = request.data.get("booking_id")
+
+        if not booking_id:
+            return Response({"error": "booking_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            booking = Booking.objects.get(id=booking_id)
+        except Booking.DoesNotExist:
+            return Response({"error": "Booking not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        provider = booking.service_provider
+        phone_number = provider.phone
+        if phone_number:
+            print(phone_number)
+        else:
+            print("phone number not found.")  # assumes ServiceProvider has a phone field
+
+        # ✅ Static message
+        message = (
+            f"Dear {provider.user.kyc.name}, "
+            f"You have a new {booking.service_type} booking request "
+            f"from {booking.customer.user.username}. Please respond soon."
+        )
+
+        result = send_sms(phone_number, message)
+
+        if result.get("success"):
+            return Response({"success": True, "message": "SMS sent successfully"}, status=status.HTTP_200_OK)
+        else:
+            return Response({"success": False, "error": result.get("error")}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

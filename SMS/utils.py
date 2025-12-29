@@ -3,10 +3,10 @@ import json
 
 def send_sms(phone_number, message):
     try:
-        if not phone_number.startswith("977"):
-            phone_number = "977" + phone_number 
+        if not phone_number.startswith("+977"):
+            phone_number = "+977" + phone_number 
         # Establish HTTPS connection to Infobip API
-        conn = http.client.HTTPSConnection("m3zxqj.api.infobip.com")
+        conn = http.client.HTTPSConnection("558qyj.api.infobip.com")
         
         payload = json.dumps({
             "messages": [
@@ -19,7 +19,7 @@ def send_sms(phone_number, message):
         })
         
         headers = {
-            'Authorization': 'App 22d114024f0bc479c46696e511f75a40-09803f30-c488-4fa6-8777-ba92dd4bacfc',  # Your API key
+            'Authorization': 'App 7342f90ef54c43cf994145c367cd587f-adee39c5-ae2e-4356-b6ea-0593f5d22b74',  # Your API key
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         }
@@ -34,6 +34,7 @@ def send_sms(phone_number, message):
         response = json.loads(data)
         print("Infobip API Response:", response)
         print("HTTP Status Code:", status_code)
+        
         # Return response for verification
         if response.get("messages"):
             return {"success": True, "response": response}

@@ -1,5 +1,11 @@
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+
 from .models import Booking,Rating,ServiceProviderAvgRating
 from userauth.models import Customer, ServiceProvider  # Import related models
 import json
@@ -307,3 +313,70 @@ def cancel_booking(request):
             return JsonResponse({"success": False, "message": f"An error occurred: {str(e)}"}, status=500)
 
     return JsonResponse({"success": False, "message": "Invalid request method."}, status=400)
+
+
+# bookings/views.py
+from rest_framework import generics, permissions
+from .models import Booking
+from .serializers import BookingSerializer
+
+
+class BookingCreateView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = BookingSerializer(data=request.data)
+        if serializer.is_valid():
+            customer = request.user.customer
+            is_online = request.data.get("is_online", False)
+            availability = "online" if is_online else "offline"
+
+            booking = serializer.save(
+                customer=customer,
+                provider_availability=availability,
+                booking_date=timezone.now(),
+                status="pending"
+            )
+
+            data = serializer.data
+            data["customer_name"] = booking.customer.user.username
+            print(data)
+
+            return Response(data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+class UserBookingsByStatusView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        # Determine if user is a customer or provider
+        if hasattr(request.user, "customer"):
+            queryset = Booking.objects.filter(customer=request.user.customer)
+        elif hasattr(request.user, "serviceprovider"):
+            queryset = Booking.objects.filter(service_provider=request.user.serviceprovider)
+        else:
+            return Response({"error": "User is neither customer nor provider"}, status=400)
+        
+        print(queryset)
+
+        # Serialize all bookings
+        serializer = BookingSerializer(queryset, many=True)
+
+        # Organize by status
+        bookings_by_status = {}
+        for booking in serializer.data:
+            status = booking["status"]
+            if status not in bookings_by_status:
+                bookings_by_status[status] = []
+            bookings_by_status[status].append(booking)
+        print(bookings_by_status)
+
+        return Response(bookings_by_status)
+
+def booking_history(request):
+    return render(request, 'boooking_detail.html')

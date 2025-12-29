@@ -245,13 +245,14 @@
         </div>
     </div>
     <script>
-        const providerId = "{{ provider_id }}";
-        console.log(providerId);
-    </script>
+    window.providerId = "{{ provider_id }}";
+    console.log("Template providerId:", window.providerId);
+</script>
     <script src="{% static 'logout.js' %}"></script>
     <script src="{% static 'serviceproviserlocation.js' %}"></script>
     <script type="module" src="{% static 'tooglebutton.js' %}"></script>
     <script type="module" src="{% static 'firebase_config.js' %}"></script>
+    <script type="module" src="{% static 'push_noti_listener.js' %}"></script>
     <script>
         // Toggle hamburger menu visibility
         document.getElementById('hamburger-menu').addEventListener('click', function() {
