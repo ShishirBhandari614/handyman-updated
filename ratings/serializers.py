@@ -12,12 +12,9 @@ class BookingSerializer(serializers.ModelSerializer):
     provider_name = serializers.CharField(source="service_provider.user.kyc.name", read_only=True)
 
     provider_phone = serializers.CharField(source="service_provider.phone", read_only=True)
+    # Change this line in BookingSerializer:
+    provider_photo = serializers.ImageField(source="service_provider.user.kyc.photo", read_only=True)
     
-    
-
-
-
-
     class Meta:
         model = Booking
         fields = [
@@ -28,6 +25,7 @@ class BookingSerializer(serializers.ModelSerializer):
             "service_provider",
             "provider_name",
             "provider_phone",
+            "provider_photo",
             "service_type",
             "booking_date",
             "status",

@@ -36,6 +36,9 @@ from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 import json
+
+from ratings.utils import push_booking_update
+
 # from .models import Customer, ServiceProvider, Booking
 
 @login_required
@@ -337,6 +340,7 @@ class BookingCreateView(APIView):
                 booking_date=timezone.now(),
                 status="pending"
             )
+            push_booking_update(booking)
 
             data = serializer.data
             data["customer_name"] = booking.customer.user.username
@@ -380,3 +384,48 @@ class UserBookingsByStatusView(APIView):
 
 def booking_history(request):
     return render(request, 'boooking_detail.html')
+
+
+class UpdateBookingStatusView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, booking_id):
+        new_status = request.data.get("status")
+
+        if not new_status:
+            return Response({"error": "Status required"}, status=400)
+
+        booking = get_object_or_404(Booking, id=booking_id)
+
+        booking.status = new_status
+        booking.save()
+
+        # 🔥 FIREBASE TRIGGER (ONLY HERE)
+        push_booking_update(booking)
+
+        return Response({
+            "id": booking.id,
+            "status": booking.status
+        })
+
+
+
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def booking_detail(request, booking_id):
+    try:
+        booking = Booking.objects.get(id=booking_id)
+        # Add permission check if needed
+        # if booking.customer != request.user and booking.provider != request.user:
+        #     return Response({'error': 'Not authorized'}, status=403)
+        
+        serializer = BookingSerializer(booking)
+        return Response(serializer.data)
+    except Booking.DoesNotExist:
+        return Response({'error': 'Booking not found'}, status=404)
