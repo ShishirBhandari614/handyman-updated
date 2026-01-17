@@ -1,6 +1,6 @@
 # bookings/serializers.py
 from rest_framework import serializers
-from .models import Booking
+from .models import Booking, Notification
 
 from django.utils import timezone
 
@@ -39,3 +39,20 @@ class BookingSerializer(serializers.ModelSerializer):
         validated_data["booking_date"] = timezone.now()
         validated_data["status"] = "pending"
         return super().create(validated_data)
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = [
+            "id",
+            "sender",
+            "sender_role",
+            "recipient",
+            "recipient_role",
+            "message",
+            "booking_id",
+            "is_read",
+            "created_at",
+        ]
+        read_only_fields = ["id", "created_at", "is_read"]

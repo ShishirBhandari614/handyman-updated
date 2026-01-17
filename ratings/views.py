@@ -1,54 +1,35 @@
-from django.http import JsonResponse
-from django.shortcuts import render, get_object_or_404
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
-
-from .models import Booking,Rating,ServiceProviderAvgRating
-from userauth.models import Customer, ServiceProvider  # Import related models
 import json
 from django.db import models
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import get_object_or_404
-from userauth.models import ServiceProvider, Customer
-from ratings.models import Booking, Cancellation
-from SMS.utils import send_sms
+from django.shortcuts import render, get_object_or_404
+from django.utils import timezone
 from django.utils.timezone import now
-import json
-
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+
+# REST Framework imports
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status, permissions, generics
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+
+# App-specific imports
+from .models import Booking, Rating, ServiceProviderAvgRating, Cancellation
+from userauth.models import Customer, ServiceProvider
+from .serializers import BookingSerializer, NotificationSerializer
+from SMS.utils import send_sms
+from ratings.utils import push_booking_update, push_firebase_notification
 
 
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, get_object_or_404
-from django.http import JsonResponse
-import json
-
-
-from django.shortcuts import render, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-import json
-from django.shortcuts import render, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-import json
-
-from ratings.utils import push_booking_update
-
-# from .models import Customer, ServiceProvider, Booking
+# --- Views ---
 
 @login_required
 def viewprofile(request):
-    context = {}
-    user = request.user  # Logged-in user
+    user = request.user 
 
     if request.method == "POST":
         try:
-            data = json.loads(request.body)
             return JsonResponse({
                 "success": True,
                 "message": "Booking processed successfully!"
@@ -57,76 +38,63 @@ def viewprofile(request):
             return JsonResponse({"success": False, "message": str(e)}, status=500)
 
     elif request.method == "GET":
-        # Extract query parameters
         service_type = request.GET.get('service_type')
         service_provider_id = request.GET.get('user_id')
-        phone_number = request.GET.get('phone_number')
-        customer_phone = request.GET.get('customer_phone')
         profile = request.GET.get('profile')
-        customer_id = request.GET.get('customer_id')  # ✅ Now optional
+        customer_id = request.GET.get('customer_id') 
 
-        # Check if the logged-in user is a Customer or Service Provider
         is_customer = Customer.objects.filter(user=user).exists()
         is_service_provider = ServiceProvider.objects.filter(user=user).exists()
 
         try:
             if is_customer:
-                # User is a Customer → Show Service Provider details
                 customer = get_object_or_404(Customer, user=user)
-
                 if not service_provider_id:
                     return JsonResponse({"success": False, "message": "Service Provider ID is missing."}, status=400)
 
                 service_provider = get_object_or_404(ServiceProvider, user_id=service_provider_id)
-
-                # Fetch latest pending booking
                 booking = Booking.objects.filter(
                     customer=customer,
                     service_provider=service_provider,
                     service_type=service_type,
                     status='pending'
-                ).order_by('-booking_date').first()  # Use .first() instead of .latest() to prevent exceptions
+                ).order_by('-booking_date').first()
 
                 context = {
                     "booking_date": booking.booking_date.strftime("%Y-%m-%d %H:%M:%S") if booking else "N/A",
                     "booking_id": booking.id if booking else None,
                     "status": booking.status if booking else "no_pending",
                     "user_id": service_provider.user.id,
-                    "phone_number": service_provider.phone,  # Fixed
+                    "phone_number": service_provider.phone,
                     "customer_name": customer.user.username,
-                    "customer_phone": customer.phone,  # Fixed
+                    "customer_phone": customer.phone,
                     "service_type": service_type,
-                    "service_provider_name": service_provider.user.kyc.name if hasattr(service_provider.user, 'kyc') else "",
+                    "service_provider_name": getattr(service_provider.user.kyc, 'name', "") if hasattr(service_provider.user, 'kyc') else "",
                     "profile": profile or (service_provider.profile_picture.url if service_provider.profile_picture else ""),
                     "customer_id": customer.id
                 }
-                print("Customer Context:", context)
 
             elif is_service_provider:
-                # ✅ Only fetch customer if customer_id is provided
                 service_provider = get_object_or_404(ServiceProvider, user=user)
-
                 if customer_id:
                     customer = get_object_or_404(Customer, user_id=customer_id)
-
-                    # Fetch latest pending booking
                     booking = Booking.objects.filter(
                         customer=customer,
                         service_provider=service_provider,
                         service_type=service_type,
                         status='pending'
-                    ).order_by('-booking_date').first()  # Use .first() instead of .latest()
+                    ).order_by('-booking_date').first()
 
                     context = {
                         "booking_date": booking.booking_date.strftime("%Y-%m-%d %H:%M:%S") if booking else "N/A",
                         "booking_id": booking.id if booking else None,
                         "status": booking.status if booking else "no_pending",
                         "user_id": customer.user.id,
-                        "phone_number": customer.phone,  
+                        "phone_number": customer.phone,
                         "customer_name": customer.user.username,
-                        "customer_phone": customer.phone,  
+                        "customer_phone": customer.phone,
                         "service_type": service_type,
-                        "service_provider_name": service_provider.user.kyc.name if hasattr(service_provider.user, 'kyc') else "",
+                        "service_provider_name": getattr(service_provider.user.kyc, 'name', "") if hasattr(service_provider.user, 'kyc') else "",
                         "profile": profile or (customer.profile_picture.url if customer.profile_picture else ""),
                         "customer_id": customer.id
                     }
@@ -134,126 +102,63 @@ def viewprofile(request):
                     context = {
                         "status": "no_customer_id",
                         "message": "No customer data available.",
-                        "service_provider_name": service_provider.user.kyc.name if hasattr(service_provider.user, 'kyc') else "",
+                        "service_provider_name": getattr(service_provider.user.kyc, 'name', "") if hasattr(service_provider.user, 'kyc') else "",
                     }
-                    print("Service Provider Context without Customer ID:", context)
-
             else:
                 return JsonResponse({"success": False, "message": "Unauthorized access."}, status=403)
+
+            return render(request, "ORDR.html", context)
 
         except Customer.DoesNotExist:
             return JsonResponse({"success": False, "message": "Customer profile not found."}, status=404)
 
-        return render(request, "ORDR.html", context)
+    return JsonResponse({"success": False, "message": "Invalid request method."}, status=405)
 
-    else:
-        return JsonResponse({"success": False, "message": "Invalid request method."}, status=405)
-
-
-
-import json
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-from django.db import models
-# from .models import Customer, ServiceProvider, Booking, Rating, ServiceProviderAvgRating
 
 def submit_rating(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
-            
-            # Extract the necessary fields
-            customer_id = data.get('customer_id')
-            service_provider_id = data.get('service_provider_id')
-            booking_id = data.get('booking_id')
-            rating_value = data.get('rating_value')
+            customer = get_object_or_404(Customer, id=data.get('customer_id'))
+            service_provider = get_object_or_404(ServiceProvider, user_id=data.get('service_provider_id'))
+            booking = get_object_or_404(Booking, id=data.get('booking_id'))
 
-            print("Customer ID:", customer_id)
-
-            # Fetch customer, service provider, and booking
-            customer = get_object_or_404(Customer, id=customer_id)
-            service_provider = get_object_or_404(ServiceProvider, user_id=service_provider_id)
-            booking = get_object_or_404(Booking, id=booking_id)
-
-            # Check if the booking is completed
             if booking.status != 'completed':
                 booking.status = 'completed'
                 booking.save()
 
-            # Create the rating
-            rating = Rating.objects.create(
+            Rating.objects.create(
                 customer=customer,
                 service_provider=service_provider,
                 booking=booking,
-                rating_value=rating_value,
+                rating_value=data.get('rating_value'),
             )
 
-            # Calculate and update the service provider's average rating
-            average_rating = Rating.objects.filter(service_provider=service_provider).aggregate(models.Avg('rating_value'))['rating_value__avg']
+            avg_val = Rating.objects.filter(service_provider=service_provider).aggregate(models.Avg('rating_value'))['rating_value__avg']
             
-            service_provider_avg_rating, created = ServiceProviderAvgRating.objects.get_or_create(user=service_provider.user)
-            service_provider_avg_rating.average_rating = average_rating
-            service_provider_avg_rating.save()
+            avg_record, _ = ServiceProviderAvgRating.objects.get_or_create(user=service_provider.user)
+            avg_record.average_rating = avg_val
+            avg_record.save()
 
-            # Save the updated rating on the service provider
-            service_provider.average_rating = average_rating
+            service_provider.average_rating = avg_val
             service_provider.save()
 
-            return JsonResponse({
-                "success": True,
-                "message": "Rating submitted successfully!",
-                "average_rating": average_rating
-            }, status=201)
-
+            return JsonResponse({"success": True, "average_rating": avg_val}, status=201)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
+    return JsonResponse({"error": "Method not allowed"}, status=405)
 
-    # ✅ Handle GET and other request methods properly
-    return JsonResponse({"error": "Invalid request method. Use POST instead."}, status=405)
 
-        
 def booking_history(request):
+    """Note: You had two versions of this view. This one renders the history list."""
     customer = request.user.customer
-    bookings = Booking.objects.filter(customer=customer).prefetch_related('rating_set').order_by('-booking_date')
+    bookings = Booking.objects.filter(customer=customer).order_by('-booking_date')
 
-    # Annotate each booking with the average rating of the service provider
     for booking in bookings:
-        service_provider = booking.service_provider
-        # Fetch the average rating from the ServiceProviderAvgRating model
-        avg_rating = ServiceProviderAvgRating.objects.filter(user=service_provider.user).first()
-
-        # Add the average rating to the booking object (this will make it accessible in the template)
+        avg_rating = ServiceProviderAvgRating.objects.filter(user=booking.service_provider.user).first()
         booking.avg_rating = avg_rating.average_rating if avg_rating else 0.0
 
     return render(request, 'booking_history.html', {'bookings': bookings})
-
-# @csrf_exempt
-# def submit_cancellation(request):
-#     if request.method == 'POST':
-#         data = json.loads(request.body)
-#         booking_id = data.get('booking_id')
-#         reason = data.get('reason')
-
-#         # Get the booking object
-#         try:
-#             booking = Booking.objects.get(id=booking_id)
-#         except Booking.DoesNotExist:
-#             return JsonResponse({'success': False, 'message': 'Booking not found.'}, status=400)
-
-#         # Create the cancellation record
-#         Cancellation.objects.create(
-#             booking=booking,
-#             reason=reason
-#         )
-
-        # # Update the booking status to canceled
-        # booking.status = 'canceled'
-        # booking.save()
-
-        # return JsonResponse({'success': True})
-def viewbooking(request):
-    return render(request, "viewbooking.html")
-
 
 
 @csrf_exempt
@@ -261,171 +166,174 @@ def cancel_booking(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
-            print("Received cancellation data:", data)
+            booking = get_object_or_404(Booking, id=data.get('booking_id'))
+            service_provider = get_object_or_404(ServiceProvider, user_id=data.get('service_provider_id'))
+            customer = get_object_or_404(Customer, id=data.get('customer_id'))
 
-            booking_id = data.get('booking_id')
-            service_provider_id = data.get('service_provider_id')
-            phone_number = data.get('phone_number')
-            customer_id = data.get('customer_id')
-            reason = data.get('reason')
-            print(booking_id)
-            print(service_provider_id)
-            print(phone_number)
-            print(reason)
-
-            if not booking_id or not service_provider_id or not customer_id or not reason:
-                return JsonResponse({"success": False, "message": "Missing required fields."}, status=400)
-
-            # Get booking, service provider, and customer
-            booking = get_object_or_404(Booking, id=booking_id)
-            service_provider = get_object_or_404(ServiceProvider, user_id=service_provider_id)
-            customer = get_object_or_404(Customer, id=customer_id)
-            print(booking)
-            print(customer)
-
-            # Update booking status to "canceled"
             booking.status = 'canceled'
             booking.save()
 
-            # Save cancellation reason
             Cancellation.objects.create(
-                booking=booking,
-                customer=customer,
+                booking=booking, customer=customer,
                 service_provider=service_provider,
-                reason=reason,
-                canceled_at=now()
+                reason=data.get('reason'), canceled_at=now()
             )
 
-            # Prepare the cancellation message
-            message = (f"Dear {service_provider.user.kyc.name}, your booking with {customer.user.username} "
-                       f"has been canceled. Reason: {reason}")
+            msg = f"Dear {service_provider.user.kyc.name}, booking with {customer.user.username} canceled. Reason: {data.get('reason')}"
+            sms_res = send_sms(data.get('phone_number'), msg)
 
-            # Send SMS to service provider and check if it was successful
-            sms_response = send_sms(phone_number, message)
-
-            # Check the SMS response for success
-            if sms_response.get("success"):
-                return JsonResponse({"success": True, "message": "Booking canceled. SMS sent!"})
-            else:
-                # In case of failure, log the error message from the SMS service
-                error_message = sms_response.get("message", "Unknown error")
-                return JsonResponse({"success": False, "message": f"Booking canceled, but SMS failed. Error: {error_message}"}, status=400)
+            if sms_res.get("success"):
+                return JsonResponse({"success": True, "message": "Canceled. SMS sent!"})
+            return JsonResponse({"success": False, "message": "Canceled, SMS failed."}, status=400)
 
         except Exception as e:
-            print("Error in cancel_booking view:", str(e))
-            return JsonResponse({"success": False, "message": f"An error occurred: {str(e)}"}, status=500)
-
-    return JsonResponse({"success": False, "message": "Invalid request method."}, status=400)
-
-
-# bookings/views.py
-from rest_framework import generics, permissions
-from .models import Booking
-from .serializers import BookingSerializer
+            return JsonResponse({"success": False, "message": str(e)}, status=500)
+    return JsonResponse({"success": False}, status=405)
 
 
 class BookingCreateView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         serializer = BookingSerializer(data=request.data)
         if serializer.is_valid():
-            customer = request.user.customer
-            is_online = request.data.get("is_online", False)
-            availability = "online" if is_online else "offline"
-
+            availability = "online" if request.data.get("is_online") else "offline"
             booking = serializer.save(
-                customer=customer,
+                customer=request.user.customer,
                 provider_availability=availability,
                 booking_date=timezone.now(),
                 status="pending"
             )
             push_booking_update(booking)
 
-            data = serializer.data
-            data["customer_name"] = booking.customer.user.username
-            print(data)
-
-            return Response(data, status=status.HTTP_201_CREATED)
+            # Notification
+            create_notification(
+                sender=request.user,
+                recipient=booking.service_provider.user,
+                message=f"Your booking has been requested by {request.user.username}",
+                booking=booking
+            )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
-
 class UserBookingsByStatusView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-    # permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # Determine if user is a customer or provider
         if hasattr(request.user, "customer"):
             queryset = Booking.objects.filter(customer=request.user.customer)
         elif hasattr(request.user, "serviceprovider"):
             queryset = Booking.objects.filter(service_provider=request.user.serviceprovider)
         else:
-            return Response({"error": "User is neither customer nor provider"}, status=400)
+            return Response({"error": "Unauthorized role"}, status=400)
         
-        print(queryset)
-
-        # Serialize all bookings
         serializer = BookingSerializer(queryset, many=True)
+        res = {}
+        for b in serializer.data:
+            res.setdefault(b["status"], []).append(b)
+        return Response(res)
 
-        # Organize by status
-        bookings_by_status = {}
-        for booking in serializer.data:
-            status = booking["status"]
-            if status not in bookings_by_status:
-                bookings_by_status[status] = []
-            bookings_by_status[status].append(booking)
-        print(bookings_by_status)
+def create_notification(*, sender, recipient, message, booking):
+    sender_role = "service_provider" if sender.is_ServiceProvider else "customer"
+    recipient_role = "service_provider" if recipient.is_ServiceProvider else "customer"
+    # 1️⃣ Save to DB via serializer
+    serializer = NotificationSerializer(
+        data={
+            "sender": sender.id,
+            "sender_role": sender_role,
+            "recipient": recipient.id,
+            "recipient_role": recipient_role,   
+            "message": message,
+            "booking_id": booking.id
+        }
+    )
+    serializer.is_valid(raise_exception=True)
+    notification = serializer.save()
+    # 2️⃣ Push to Firebase
+    push_firebase_notification(
+        recipient.id,
+        {
+            "message": notification.message,
+            "booking_id": notification.booking_id,
+            "notification_id": notification.id,
+            "sender_id": sender.id,
+            "sender_role": sender_role,
+            "recipient_id": recipient.id,
+            "recipient_role": recipient_role,
+        }
+    )
 
-        return Response(bookings_by_status)
+    return notification
 
-def booking_history(request):
+def viewbooking(request):
     return render(request, 'boooking_detail.html')
 
-
 class UpdateBookingStatusView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, booking_id):
         new_status = request.data.get("status")
-
         if not new_status:
             return Response({"error": "Status required"}, status=400)
 
         booking = get_object_or_404(Booking, id=booking_id)
-
         booking.status = new_status
         booking.save()
 
-        # 🔥 FIREBASE TRIGGER (ONLY HERE)
         push_booking_update(booking)
 
-        return Response({
-            "id": booking.id,
-            "status": booking.status
-        })
+        # Booking-specific notification
+        if request.user.is_ServiceProvider:
+            recipient = booking.customer.user
+            message = f"Your booking has been {new_status} by the service provider"
+        else:
+            recipient = booking.service_provider.user
+            message = f"Booking status updated to {new_status} by customer"
+
+        create_notification(
+            sender=request.user,
+            recipient=recipient,
+            message=message,
+            booking=booking
+        )
+
+        return Response({"id": booking.id, "status": booking.status})
 
 
-
-
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from django.shortcuts import get_object_or_404
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def booking_detail(request, booking_id):
-    try:
-        booking = Booking.objects.get(id=booking_id)
-        # Add permission check if needed
-        # if booking.customer != request.user and booking.provider != request.user:
-        #     return Response({'error': 'Not authorized'}, status=403)
-        
-        serializer = BookingSerializer(booking)
-        return Response(serializer.data)
-    except Booking.DoesNotExist:
-        return Response({'error': 'Booking not found'}, status=404)
+    booking = get_object_or_404(Booking, id=booking_id)
+    serializer = BookingSerializer(booking)
+    return Response(serializer.data)
+
+
+class CreateNotificationAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = NotificationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # 1️⃣ Save to DB
+        notification = serializer.save()
+
+        # 2️⃣ Push to Firebase
+        push_firebase_notification(
+            notification.recipient.id,
+            {
+                "message": notification.message,
+                "booking_id": notification.booking_id,
+                "notification_id": notification.id,
+            }
+        )
+
+        return Response(
+            {
+                "message": "Notification created",
+                "notification": NotificationSerializer(notification).data,
+            },
+            status=status.HTTP_201_CREATED,
+        )

@@ -157,6 +157,7 @@ class ServiceProviderDashboardView(View):
             'kyc_message': kyc_message,  # Pass the KYC message to the template
             'kyc_link': kyc_link,  # Dynamic KYC link
             'provider_id': request.user.serviceprovider.id,
+            'user': request.user,  # Pass user object for notification listener
         }
         print(context)
 

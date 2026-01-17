@@ -152,8 +152,11 @@ async function sendFirebaseNotification(providerId, serviceType) {
             is_online: true
         })
     });
+    if (bookingRes.ok){
+        alert("bookink success")
+    }
     
-    if (!bookingRes.ok) {
+    else  {
         const err = await bookingRes.json();
         console.error("❌ Booking failed:", err);
         alert("Booking could not be saved. Please try again.");
@@ -164,20 +167,20 @@ async function sendFirebaseNotification(providerId, serviceType) {
     console.log("✅ Booking saved in Django:", bookingData);
 
     // ✅ 2. Send real-time notification to Firebase
-    const notifRef = ref(db, `notifications/${providerId}/latest`);
+    // const notifRef = ref(db, `notifications/${providerId}/latest`);
 
-    try {
-        await set(notifRef, {
-            // customer_name: bookingData.customer_name,             
-            message: bookingData.customer_name + " has requested a booking",
-            booking_id: bookingData.id,
-            timestamp: Date.now()
-        });
-        alert("Booking request sent (provider online)");
-    } catch (err) {
-        console.error("❌ Firebase write failed:", err);
-        alert("Booking saved but notification failed.");
-    }
+    // try {
+    //     await set(notifRef, {
+    //         // customer_name: bookingData.customer_name,             
+    //         message: bookingData.customer_name + " has requested a booking",
+    //         booking_id: bookingData.id,
+    //         timestamp: Date.now()
+    //     });
+    //     alert("Booking request sent (provider online)");
+    // } catch (err) {
+    //     console.error("❌ Firebase write failed:", err);
+    //     alert("Booking saved but notification failed.");
+    // }
 
 }
 

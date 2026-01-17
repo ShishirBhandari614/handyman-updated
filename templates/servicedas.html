@@ -246,12 +246,14 @@
     </div>
     <script>
     window.providerId = "{{ provider_id }}";
+    window.recipientId = "{{ user.id }}";
     console.log("Template providerId:", window.providerId);
+    console.log("Template recipientId (user ID):", window.recipientId);
 </script>
     <script src="{% static 'logout.js' %}"></script>
     <script src="{% static 'serviceproviserlocation.js' %}"></script>
     <script type="module" src="{% static 'tooglebutton.js' %}"></script>
-    <script type="module" src="{% static 'firebase_config.js' %}"></script>
+    {% comment %} <script type="module" src="{% static 'firebase_config.js' %}"></script> {% endcomment %}
     <script type="module" src="{% static 'push_noti_listener.js' %}"></script>
     <script>
         // Toggle hamburger menu visibility
