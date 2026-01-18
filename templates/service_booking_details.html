@@ -1,0 +1,28 @@
+{% extends "service_base.html" %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'service_booking_details.css' %}">
+
+<div class="booking-page">
+  <h1 class="page-title">Service Bookings</h1>
+
+  <!-- Status Buttons -->
+  <div id="status-buttons" class="status-buttons">
+    <button data-status="pending">Pending</button>
+    <button data-status="accepted">Accepted</button>
+    <button data-status="in_progress">In Progress</button>
+    <button data-status="completed">Completed</button>
+    <button data-status="canceled">Canceled</button>
+  </div>
+
+  <!-- Bookings Container -->
+  <div id="bookings-container" class="bookings-container"></div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<script src="{% static 'service_booking_detail.js' %}"></script>
+{% endblock %}

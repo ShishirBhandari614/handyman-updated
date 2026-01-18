@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <title>{% block title %}HandiQ{% endblock %}</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link rel="stylesheet" href="{% static 'serviceproviderdas.css' %}?v={{ STATIC_VERSION }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div class="hamburger-menu" id="hamburger-menu">
+                <i class="fas fa-bars fa-2x"></i>
+            </div>
+            <!-- Child templates can inject content here -->
+            {% block navbar_content %}{% endblock %}
+        </nav>
+
+        <!-- Hamburger Menu Content -->
+        <div class="hamburger-content" id="hamburger-content">
+            <div class="profile">
+                {% if user.kyc %}
+                    <img src="{{ user.kyc.photo.url }}" alt="{{ user.kyc.name }}'s Profile Picture">
+                    <div class="username">
+                        <p>{{ user.kyc.name }}</p>
+                        <span class="kyc-status">{{ kyc_message }}</span>
+                    </div>
+                {% else %}
+                    <div class="username">
+                        <p>{{ user.username }}</p>
+                        <span class="kyc-status">KYC not submitted</span>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- KYC Menu -->
+            <div class="menu-card">
+                <div class="menu-item">
+                    <i class="fas fa-id-card"></i>
+                    {% if user.is_ServiceProvider %}
+                        {% if user.kyc %}
+                            {% if user.kyc.is_verified %}
+                                <span>KYC Verified</span>
+                            {% else %}
+                                <a href="/kyc-update/"><span>Update KYC</span></a>
+                            {% endif %}
+                        {% else %}
+                            <a href="/kyc-verification/"><span>Submit KYC</span></a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="menu-item settings">
+                <i class="fas fa-cog"></i>
+                <a href="/settings/">Settings</a>
+                <div class="submenu">
+                    <a href="/settings/change-phone-number/">Change Phone Number</a>
+                    <a href="/settings/change-password/">Change Password</a>
+                </div>
+            </div>
+
+            <!-- Other Menu Items -->
+             <div class="menu-item">
+                <i class="fas fa-history"></i>
+                <a href="/service-booking-detail/">Booking Details</a>
+            </div>
+
+            <div class="menu-item">
+                <i class="fas fa-headset"></i>
+                <a href="/support/">Support</a>
+            </div>
+            <div class="menu-item">
+                <i class="fas fa-question-circle"></i>
+                <a href="/help/">Help</a>
+            </div>
+
+            <button id="logout-btn">Logout</button>
+        </div>
+
+        <!-- Page-specific content -->
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Logout Modal -->
+    <div id="logoutModal" class="modal">
+        <div class="modal-content">
+            <p>Are you sure you want to log out?</p>
+            <button id="confirmLogout">Yes</button>
+            <button id="cancelLogout">No</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        window.providerId = "{{ provider_id }}";
+        window.recipientId = "{{ user.id }}";
+    </script>
+    <script src="{% static 'logout.js' %}"></script>
+    <script src="{% static 'serviceproviserlocation.js' %}"></script>
+    <script type="module" src="{% static 'tooglebutton.js' %}"></script>
+    <script type="module" src="{% static 'push_noti_listener.js' %}"></script>
+    <script>
+    const hamburgerMenu = document.getElementById('hamburger-menu');
+    const menuContent = document.getElementById('hamburger-content');
+
+    // Toggle menu when clicking the hamburger icon
+    hamburgerMenu.addEventListener('click', function (event) {
+        event.stopPropagation(); // Prevent click from bubbling to document
+        menuContent.style.display = 
+            menuContent.style.display === 'block' ? 'none' : 'block';
+    });
+
+    // Close menu when clicking anywhere outside
+    document.addEventListener('click', function (event) {
+        const isClickInsideMenu = menuContent.contains(event.target);
+        const isClickOnHamburger = hamburgerMenu.contains(event.target);
+
+        if (!isClickInsideMenu && !isClickOnHamburger) {
+            menuContent.style.display = 'none';
+        }
+    });
+</script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

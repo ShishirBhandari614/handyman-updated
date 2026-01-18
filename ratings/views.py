@@ -24,171 +24,171 @@ from ratings.utils import push_booking_update, push_firebase_notification
 
 # --- Views ---
 
-@login_required
-def viewprofile(request):
-    user = request.user 
+# @login_required
+# def viewprofile(request):
+#     user = request.user 
 
-    if request.method == "POST":
-        try:
-            return JsonResponse({
-                "success": True,
-                "message": "Booking processed successfully!"
-            })
-        except Exception as e:
-            return JsonResponse({"success": False, "message": str(e)}, status=500)
+#     if request.method == "POST":
+#         try:
+#             return JsonResponse({
+#                 "success": True,
+#                 "message": "Booking processed successfully!"
+#             })
+#         except Exception as e:
+#             return JsonResponse({"success": False, "message": str(e)}, status=500)
 
-    elif request.method == "GET":
-        service_type = request.GET.get('service_type')
-        service_provider_id = request.GET.get('user_id')
-        profile = request.GET.get('profile')
-        customer_id = request.GET.get('customer_id') 
+#     elif request.method == "GET":
+#         service_type = request.GET.get('service_type')
+#         service_provider_id = request.GET.get('user_id')
+#         profile = request.GET.get('profile')
+#         customer_id = request.GET.get('customer_id') 
 
-        is_customer = Customer.objects.filter(user=user).exists()
-        is_service_provider = ServiceProvider.objects.filter(user=user).exists()
+#         is_customer = Customer.objects.filter(user=user).exists()
+#         is_service_provider = ServiceProvider.objects.filter(user=user).exists()
 
-        try:
-            if is_customer:
-                customer = get_object_or_404(Customer, user=user)
-                if not service_provider_id:
-                    return JsonResponse({"success": False, "message": "Service Provider ID is missing."}, status=400)
+#         try:
+#             if is_customer:
+#                 customer = get_object_or_404(Customer, user=user)
+#                 if not service_provider_id:
+#                     return JsonResponse({"success": False, "message": "Service Provider ID is missing."}, status=400)
 
-                service_provider = get_object_or_404(ServiceProvider, user_id=service_provider_id)
-                booking = Booking.objects.filter(
-                    customer=customer,
-                    service_provider=service_provider,
-                    service_type=service_type,
-                    status='pending'
-                ).order_by('-booking_date').first()
+#                 service_provider = get_object_or_404(ServiceProvider, user_id=service_provider_id)
+#                 booking = Booking.objects.filter(
+#                     customer=customer,
+#                     service_provider=service_provider,
+#                     service_type=service_type,
+#                     status='pending'
+#                 ).order_by('-booking_date').first()
 
-                context = {
-                    "booking_date": booking.booking_date.strftime("%Y-%m-%d %H:%M:%S") if booking else "N/A",
-                    "booking_id": booking.id if booking else None,
-                    "status": booking.status if booking else "no_pending",
-                    "user_id": service_provider.user.id,
-                    "phone_number": service_provider.phone,
-                    "customer_name": customer.user.username,
-                    "customer_phone": customer.phone,
-                    "service_type": service_type,
-                    "service_provider_name": getattr(service_provider.user.kyc, 'name', "") if hasattr(service_provider.user, 'kyc') else "",
-                    "profile": profile or (service_provider.profile_picture.url if service_provider.profile_picture else ""),
-                    "customer_id": customer.id
-                }
+#                 context = {
+#                     "booking_date": booking.booking_date.strftime("%Y-%m-%d %H:%M:%S") if booking else "N/A",
+#                     "booking_id": booking.id if booking else None,
+#                     "status": booking.status if booking else "no_pending",
+#                     "user_id": service_provider.user.id,
+#                     "phone_number": service_provider.phone,
+#                     "customer_name": customer.user.username,
+#                     "customer_phone": customer.phone,
+#                     "service_type": service_type,
+#                     "service_provider_name": getattr(service_provider.user.kyc, 'name', "") if hasattr(service_provider.user, 'kyc') else "",
+#                     "profile": profile or (service_provider.profile_picture.url if service_provider.profile_picture else ""),
+#                     "customer_id": customer.id
+#                 }
 
-            elif is_service_provider:
-                service_provider = get_object_or_404(ServiceProvider, user=user)
-                if customer_id:
-                    customer = get_object_or_404(Customer, user_id=customer_id)
-                    booking = Booking.objects.filter(
-                        customer=customer,
-                        service_provider=service_provider,
-                        service_type=service_type,
-                        status='pending'
-                    ).order_by('-booking_date').first()
+#             elif is_service_provider:
+#                 service_provider = get_object_or_404(ServiceProvider, user=user)
+#                 if customer_id:
+#                     customer = get_object_or_404(Customer, user_id=customer_id)
+#                     booking = Booking.objects.filter(
+#                         customer=customer,
+#                         service_provider=service_provider,
+#                         service_type=service_type,
+#                         status='pending'
+#                     ).order_by('-booking_date').first()
 
-                    context = {
-                        "booking_date": booking.booking_date.strftime("%Y-%m-%d %H:%M:%S") if booking else "N/A",
-                        "booking_id": booking.id if booking else None,
-                        "status": booking.status if booking else "no_pending",
-                        "user_id": customer.user.id,
-                        "phone_number": customer.phone,
-                        "customer_name": customer.user.username,
-                        "customer_phone": customer.phone,
-                        "service_type": service_type,
-                        "service_provider_name": getattr(service_provider.user.kyc, 'name', "") if hasattr(service_provider.user, 'kyc') else "",
-                        "profile": profile or (customer.profile_picture.url if customer.profile_picture else ""),
-                        "customer_id": customer.id
-                    }
-                else:
-                    context = {
-                        "status": "no_customer_id",
-                        "message": "No customer data available.",
-                        "service_provider_name": getattr(service_provider.user.kyc, 'name', "") if hasattr(service_provider.user, 'kyc') else "",
-                    }
-            else:
-                return JsonResponse({"success": False, "message": "Unauthorized access."}, status=403)
+#                     context = {
+#                         "booking_date": booking.booking_date.strftime("%Y-%m-%d %H:%M:%S") if booking else "N/A",
+#                         "booking_id": booking.id if booking else None,
+#                         "status": booking.status if booking else "no_pending",
+#                         "user_id": customer.user.id,
+#                         "phone_number": customer.phone,
+#                         "customer_name": customer.user.username,
+#                         "customer_phone": customer.phone,
+#                         "service_type": service_type,
+#                         "service_provider_name": getattr(service_provider.user.kyc, 'name', "") if hasattr(service_provider.user, 'kyc') else "",
+#                         "profile": profile or (customer.profile_picture.url if customer.profile_picture else ""),
+#                         "customer_id": customer.id
+#                     }
+#                 else:
+#                     context = {
+#                         "status": "no_customer_id",
+#                         "message": "No customer data available.",
+#                         "service_provider_name": getattr(service_provider.user.kyc, 'name', "") if hasattr(service_provider.user, 'kyc') else "",
+#                     }
+#             else:
+#                 return JsonResponse({"success": False, "message": "Unauthorized access."}, status=403)
 
-            return render(request, "ORDR.html", context)
+#             return render(request, "ORDR.html", context)
 
-        except Customer.DoesNotExist:
-            return JsonResponse({"success": False, "message": "Customer profile not found."}, status=404)
+#         except Customer.DoesNotExist:
+#             return JsonResponse({"success": False, "message": "Customer profile not found."}, status=404)
 
-    return JsonResponse({"success": False, "message": "Invalid request method."}, status=405)
+#     return JsonResponse({"success": False, "message": "Invalid request method."}, status=405)
 
 
-def submit_rating(request):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            customer = get_object_or_404(Customer, id=data.get('customer_id'))
-            service_provider = get_object_or_404(ServiceProvider, user_id=data.get('service_provider_id'))
-            booking = get_object_or_404(Booking, id=data.get('booking_id'))
+# def submit_rating(request):
+#     if request.method == "POST":
+#         try:
+#             data = json.loads(request.body)
+#             customer = get_object_or_404(Customer, id=data.get('customer_id'))
+#             service_provider = get_object_or_404(ServiceProvider, user_id=data.get('service_provider_id'))
+#             booking = get_object_or_404(Booking, id=data.get('booking_id'))
 
-            if booking.status != 'completed':
-                booking.status = 'completed'
-                booking.save()
+#             if booking.status != 'completed':
+#                 booking.status = 'completed'
+#                 booking.save()
 
-            Rating.objects.create(
-                customer=customer,
-                service_provider=service_provider,
-                booking=booking,
-                rating_value=data.get('rating_value'),
-            )
+#             Rating.objects.create(
+#                 customer=customer,
+#                 service_provider=service_provider,
+#                 booking=booking,
+#                 rating_value=data.get('rating_value'),
+#             )
 
-            avg_val = Rating.objects.filter(service_provider=service_provider).aggregate(models.Avg('rating_value'))['rating_value__avg']
+#             avg_val = Rating.objects.filter(service_provider=service_provider).aggregate(models.Avg('rating_value'))['rating_value__avg']
             
-            avg_record, _ = ServiceProviderAvgRating.objects.get_or_create(user=service_provider.user)
-            avg_record.average_rating = avg_val
-            avg_record.save()
+#             avg_record, _ = ServiceProviderAvgRating.objects.get_or_create(user=service_provider.user)
+#             avg_record.average_rating = avg_val
+#             avg_record.save()
 
-            service_provider.average_rating = avg_val
-            service_provider.save()
+#             service_provider.average_rating = avg_val
+#             service_provider.save()
 
-            return JsonResponse({"success": True, "average_rating": avg_val}, status=201)
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
-    return JsonResponse({"error": "Method not allowed"}, status=405)
-
-
-def booking_history(request):
-    """Note: You had two versions of this view. This one renders the history list."""
-    customer = request.user.customer
-    bookings = Booking.objects.filter(customer=customer).order_by('-booking_date')
-
-    for booking in bookings:
-        avg_rating = ServiceProviderAvgRating.objects.filter(user=booking.service_provider.user).first()
-        booking.avg_rating = avg_rating.average_rating if avg_rating else 0.0
-
-    return render(request, 'booking_history.html', {'bookings': bookings})
+#             return JsonResponse({"success": True, "average_rating": avg_val}, status=201)
+#         except Exception as e:
+#             return JsonResponse({"error": str(e)}, status=500)
+#     return JsonResponse({"error": "Method not allowed"}, status=405)
 
 
-@csrf_exempt
-def cancel_booking(request):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            booking = get_object_or_404(Booking, id=data.get('booking_id'))
-            service_provider = get_object_or_404(ServiceProvider, user_id=data.get('service_provider_id'))
-            customer = get_object_or_404(Customer, id=data.get('customer_id'))
+# def booking_history(request):
+#     """Note: You had two versions of this view. This one renders the history list."""
+#     customer = request.user.customer
+#     bookings = Booking.objects.filter(customer=customer).order_by('-booking_date')
 
-            booking.status = 'canceled'
-            booking.save()
+#     for booking in bookings:
+#         avg_rating = ServiceProviderAvgRating.objects.filter(user=booking.service_provider.user).first()
+#         booking.avg_rating = avg_rating.average_rating if avg_rating else 0.0
 
-            Cancellation.objects.create(
-                booking=booking, customer=customer,
-                service_provider=service_provider,
-                reason=data.get('reason'), canceled_at=now()
-            )
+#     return render(request, 'booking_history.html', {'bookings': bookings})
 
-            msg = f"Dear {service_provider.user.kyc.name}, booking with {customer.user.username} canceled. Reason: {data.get('reason')}"
-            sms_res = send_sms(data.get('phone_number'), msg)
 
-            if sms_res.get("success"):
-                return JsonResponse({"success": True, "message": "Canceled. SMS sent!"})
-            return JsonResponse({"success": False, "message": "Canceled, SMS failed."}, status=400)
+# @csrf_exempt
+# def cancel_booking(request):
+#     if request.method == "POST":
+#         try:
+#             data = json.loads(request.body)
+#             booking = get_object_or_404(Booking, id=data.get('booking_id'))
+#             service_provider = get_object_or_404(ServiceProvider, user_id=data.get('service_provider_id'))
+#             customer = get_object_or_404(Customer, id=data.get('customer_id'))
 
-        except Exception as e:
-            return JsonResponse({"success": False, "message": str(e)}, status=500)
-    return JsonResponse({"success": False}, status=405)
+#             booking.status = 'canceled'
+#             booking.save()
+
+#             Cancellation.objects.create(
+#                 booking=booking, customer=customer,
+#                 service_provider=service_provider,
+#                 reason=data.get('reason'), canceled_at=now()
+#             )
+
+#             msg = f"Dear {service_provider.user.kyc.name}, booking with {customer.user.username} canceled. Reason: {data.get('reason')}"
+#             sms_res = send_sms(data.get('phone_number'), msg)
+
+#             if sms_res.get("success"):
+#                 return JsonResponse({"success": True, "message": "Canceled. SMS sent!"})
+#             return JsonResponse({"success": False, "message": "Canceled, SMS failed."}, status=400)
+
+#         except Exception as e:
+#             return JsonResponse({"success": False, "message": str(e)}, status=500)
+#     return JsonResponse({"success": False}, status=405)
 
 
 class BookingCreateView(APIView):
@@ -217,22 +217,42 @@ class BookingCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
 class UserBookingsByStatusView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if hasattr(request.user, "customer"):
-            queryset = Booking.objects.filter(customer=request.user.customer)
-        elif hasattr(request.user, "serviceprovider"):
-            queryset = Booking.objects.filter(service_provider=request.user.serviceprovider)
+        user = request.user
+
+        if user.is_customer:
+            try:
+                queryset = Booking.objects.filter(customer=user.customer)
+            except Exception:
+                return Response({"error": "Customer profile not found"}, status=400)
+
+        elif user.is_ServiceProvider:
+            try:
+                queryset = Booking.objects.filter(service_provider=user.serviceprovider)
+            except Exception:
+                return Response({"error": "Service provider profile not found"}, status=400)
+
         else:
-            return Response({"error": "Unauthorized role"}, status=400)
-        
+            return Response({"error": "Unauthorized role"}, status=403)
+
         serializer = BookingSerializer(queryset, many=True)
-        res = {}
-        for b in serializer.data:
-            res.setdefault(b["status"], []).append(b)
-        return Response(res)
+
+        response = {}
+        for booking in serializer.data:
+            status = booking["status"]
+            response.setdefault(status, []).append(booking)
+        
+        print(response)
+
+        return Response(response)
+
 
 def create_notification(*, sender, recipient, message, booking):
     sender_role = "service_provider" if sender.is_ServiceProvider else "customer"
@@ -337,3 +357,6 @@ class CreateNotificationAPIView(APIView):
             },
             status=status.HTTP_201_CREATED,
         )
+
+def service_booking_details(request):
+    return render(request,'service_booking_details.html')
